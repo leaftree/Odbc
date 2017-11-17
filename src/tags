@@ -1,0 +1,42 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+DBApiConnectDatabase	DB_Api.c	/^SQLINTEGER DBApiConnectDatabase(SQLHDBC *hDbc,$/;"	f
+DBApiDisConnectDatabase	DB_Api.c	/^SQLINTEGER DBApiDisConnectDatabase(SQLHDBC hDbc)$/;"	f
+DBApiExecSQL	DB_Api.c	/^SQLINTEGER DBApiExecSQL(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt)$/;"	f
+DBApiFreeDbc	DB_Api.c	/^SQLINTEGER DBApiFreeDbc(SQLHDBC hDbc)$/;"	f
+DBApiFreeEnv	DB_Api.c	/^SQLINTEGER DBApiFreeEnv(SQLHENV hEnv)$/;"	f
+DBApiFreeStmt	DB_Api.c	/^SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt)$/;"	f
+DBApiGetErrorInfo	DB_Api.c	/^SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,$/;"	f
+DBApiInitEnv	DB_Api.c	/^SQLINTEGER DBApiInitEnv(SQLHENV *hEnv, SQLHDBC *hDbc)$/;"	f
+DBApiPreExecSQL	DB_Api.c	/^SQLINTEGER DBApiPreExecSQL(SQLHDBC hDbc, SQLHSTMT *hStmt)$/;"	f
+DBOP_NO	DB_Api.h	21;"	d
+DBOP_NO	DB_Api.h	31;"	d
+DBOP_NO	DB_Api.h	32;"	d
+DBOP_OK	DB_Api.h	20;"	d
+DBOP_OK	DB_Api.h	26;"	d
+DBOP_OK	DB_Api.h	27;"	d
+DB_NO_DATA	DB_Api.h	23;"	d
+DB_NO_DATA	DB_Api.h	36;"	d
+DB_NO_DATA	DB_Api.h	37;"	d
+K8	DB_Api.c	14;"	d	file:
+Tracer	DB_Api.c	25;"	d	file:
+Tracer	main.c	3;"	d	file:
+TracerNumber	DB_Api.c	26;"	d	file:
+_DB_API_H_	DB_Api.h	3;"	d
+__DBApiCheckSQLReturn	DB_Api.c	/^static SQLINTEGER __DBApiCheckSQLReturn(SQLSMALLINT hType,$/;"	f	file:
+__DBApiFreeHandle	DB_Api.c	/^static SQLINTEGER __DBApiFreeHandle(SQLSMALLINT hType, SQLHANDLE hHandle)$/;"	f	file:
+__tracer	DB_Api.c	/^void __tracer(const char *file, int line, const char *func, const char *str)$/;"	f
+__tracerNumber	DB_Api.c	/^void __tracerNumber(const char *file, int line, const char *func, const int v)$/;"	f
+false	DB_Api.h	16;"	d
+false	DB_Api.h	17;"	d
+ghDbc	DB_Api.c	/^SQLHANDLE ghDbc = NULL;$/;"	v
+ghEnv	DB_Api.c	/^SQLHANDLE ghEnv = NULL;$/;"	v
+ghStmt	DB_Api.c	/^SQLHANDLE ghStmt = NULL;$/;"	v
+main	main.c	/^int main()$/;"	f
+true	DB_Api.h	11;"	d
+true	DB_Api.h	12;"	d
+writelog	DB_Api.c	/^void writelog(const char *fmt, ...)$/;"	f
