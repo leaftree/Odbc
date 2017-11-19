@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc -g3
 
 CCCOLOR   = "\033[33m"
 LINKCOLOR = "\033[34;1m"

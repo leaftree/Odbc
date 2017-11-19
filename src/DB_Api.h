@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <malloc.h>
 
 #include <sqlext.h>
 
@@ -37,7 +38,69 @@
 # define DB_NO_DATA (NOT_FOUND)
 #endif
 
-//int DBApi_Connect();
-//int DBApi_Disconnect();
+typedef struct filde_cache_list_ {
+	int  FieldSize;
+	int  FieldType;
+	char FieldName[128];
+} FieldCacheList;
+
+typedef struct table_cache_list_ {
+	int             TotalSize;
+	int             FieldCounter;
+	char            TableName[128];
+	FieldCacheList *FieldList;
+} TableCacheList;
+
+typedef struct db_query_result_ {
+	int   TableSize;
+	int   ResultCounter;
+	void *CurrentPosition;
+	void *ResultSet;
+} DBQueryResult;
+
+#define SIZE_OF_FIELD_CACHE(field) \
+	(sizeof(TableCacheList))
+
+#define NEW_FIELD_LIST(field, cnt) \
+	(field=(void*)malloc(sizeof(FieldCacheList)*cnt))
+
+#define SIZE_OF_DB_QUERY_RESULT() \
+	(sizeof(DBQueryResult))
+
+#define NEW_DB_QUERY_RESULT(dbres, nmemb, size) \
+	(dbres=(void*)malloc(SIZE_OF_DB_QUERY_RESULT()+nmemb*size))
+
+
+SQLINTEGER DBApiInitEnv(SQLHENV *hEnv,
+	                    	SQLHDBC *hDbc);
+
+SQLINTEGER DBApiConnectDatabase(SQLHDBC *hDbc,
+                                SQLCHAR *pcaDBName,
+                                SQLCHAR *pcaDBUserName,
+                                SQLCHAR *pcaDBUserPassword);
+
+SQLINTEGER DBApiDisConnectDatabase(SQLHDBC hDbc);
+
+SQLINTEGER DBApiPreExecSQL(SQLHDBC   hDbc,
+                           SQLHSTMT *hStmt);
+
+SQLINTEGER DBApiExecSQL(SQLHSTMT hStmt,
+                        SQLCHAR *pcaSqlStmt);
+
+SQLINTEGER DBApiFreeEnv(SQLHENV hEnv);
+
+SQLINTEGER DBApiFreeDbc(SQLHDBC hDbc);
+
+SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt);
+
+/*
+SQLINTEGER DBApiQuery(SQLHSTMT        hStmt,
+		                  SQLCHAR       *pcaSqlStmt,
+		                  DBQueryResult *pDBQueryRes);
+											*/
+
+SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
+                             SQLHANDLE   hHandle,
+                             SQLCHAR    *pcaMsgText);
 
 #endif /* _DB_API_H_ */

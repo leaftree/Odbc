@@ -284,47 +284,53 @@ int main()
 
     SQLCHAR caSqlStmt[1024] = "";
 
-    writelog("LINE %d", __LINE__);
-
     if(DBOP_NO == DBApiInitEnv(&hEnv, &hDbc))
     {
+			Tracer("DBApiInitEnv");
         return 1;
     }
     ghEnv = hEnv;
     ghDbc = hDbc;
-    writelog("LINE %d return value(%d)", __LINE__, iRet);
 
-    if(DBOP_NO == DBApiConnectDatabase(&hDbc, "MySQL", "mysql", "mysql"))
+    if(DBOP_NO == DBApiConnectDatabase(&hDbc, "MySQL", "root", "123kbc,./"))
     {
+			Tracer("DBApiConnectDatabase");
         return 1;
     }
-    writelog("LINE %d return value(%d)", __LINE__, iRet);
 
     if(DBOP_NO == DBApiPreExecSQL(hDbc, &hStmt))
     {
         return 1;
     }
     ghStmt = hStmt;
-    writelog("LINE %d return value(%d)", __LINE__, iRet);
 
     Tracer("DBApiExecSQL beg");
-    sprintf(caSqlStmt, "use test");
+    sprintf(caSqlStmt, "use fyl");
     if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
     {
         return 1;
     }
     Tracer("DBApiExecSQL end");
 
-    sprintf(caSqlStmt, "select * from table_v1x");
-    if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
-    {
-        return 1;
-    }
-    writelog("LINE %d", __LINE__);
+    sprintf(caSqlStmt, "select * from BASI_STATION_INFO ");
+		DBQueryResult stDbQueryHandle;
 
+		void *xp = malloc(1000);
+		iRet = DBApiQuery( hStmt,  caSqlStmt, &stDbQueryHandle, xp);
+		if(iRet != DBOP_OK)
+		{
+			Tracer("fail to query data");
+		}
+
+		Tracer("end to query data");
+
+		Tracer("DBApiFreeStmt");
     DBApiFreeStmt(hStmt);
+		Tracer("DBApiDisConnectDatabase");
     DBApiDisConnectDatabase(hDbc);
+		Tracer("DBApiFreeDbc");
     DBApiFreeDbc(hDbc);
+		Tracer("DBApiFreeEnv");
     DBApiFreeEnv(hEnv);
 
     Tracer("Main End");

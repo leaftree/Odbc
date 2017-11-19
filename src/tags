@@ -3,7 +3,8 @@
 !_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
-!_TAG_PROGRAM_VERSION	5.8	//
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CurrentPosition	DB_Api.h	/^	void *CurrentPosition;$/;"	m	struct:db_query_result_
 DBApiConnectDatabase	DB_Api.c	/^SQLINTEGER DBApiConnectDatabase(SQLHDBC *hDbc,$/;"	f
 DBApiDisConnectDatabase	DB_Api.c	/^SQLINTEGER DBApiDisConnectDatabase(SQLHDBC hDbc)$/;"	f
 DBApiExecSQL	DB_Api.c	/^SQLINTEGER DBApiExecSQL(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt)$/;"	f
@@ -13,30 +14,52 @@ DBApiFreeStmt	DB_Api.c	/^SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt)$/;"	f
 DBApiGetErrorInfo	DB_Api.c	/^SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,$/;"	f
 DBApiInitEnv	DB_Api.c	/^SQLINTEGER DBApiInitEnv(SQLHENV *hEnv, SQLHDBC *hDbc)$/;"	f
 DBApiPreExecSQL	DB_Api.c	/^SQLINTEGER DBApiPreExecSQL(SQLHDBC hDbc, SQLHSTMT *hStmt)$/;"	f
-DBOP_NO	DB_Api.h	21;"	d
-DBOP_NO	DB_Api.h	31;"	d
+DBApiQuery	DB_Api.c	/^SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DBQueryResult *pDBQueryRes)$/;"	f
+DBOP_NO	DB_Api.h	22;"	d
 DBOP_NO	DB_Api.h	32;"	d
-DBOP_OK	DB_Api.h	20;"	d
-DBOP_OK	DB_Api.h	26;"	d
+DBOP_NO	DB_Api.h	33;"	d
+DBOP_OK	DB_Api.h	21;"	d
 DBOP_OK	DB_Api.h	27;"	d
-DB_NO_DATA	DB_Api.h	23;"	d
-DB_NO_DATA	DB_Api.h	36;"	d
+DBOP_OK	DB_Api.h	28;"	d
+DBQueryResult	DB_Api.h	/^} DBQueryResult;$/;"	t	typeref:struct:db_query_result_
+DB_NO_DATA	DB_Api.h	24;"	d
 DB_NO_DATA	DB_Api.h	37;"	d
-K8	DB_Api.c	14;"	d	file:
-Tracer	DB_Api.c	25;"	d	file:
+DB_NO_DATA	DB_Api.h	38;"	d
+FieldCacheList	DB_Api.h	/^} FieldCacheList;$/;"	t	typeref:struct:filde_cache_list_
+FieldCounter	DB_Api.h	/^	int             FieldCounter;$/;"	m	struct:table_cache_list_
+FieldList	DB_Api.h	/^	FieldCacheList *FieldList;$/;"	m	struct:table_cache_list_
+FieldName	DB_Api.h	/^	char FieldName[128];$/;"	m	struct:filde_cache_list_
+FieldSize	DB_Api.h	/^	int  FieldSize;$/;"	m	struct:filde_cache_list_
+FieldType	DB_Api.h	/^	int  FieldType;$/;"	m	struct:filde_cache_list_
+K8	DB_Api.c	10;"	d	file:
+NEW_DB_QUERY_RESULT	DB_Api.h	70;"	d
+NEW_FIELD_LIST	DB_Api.h	64;"	d
+ResultCounter	DB_Api.h	/^	int   ResultCounter;$/;"	m	struct:db_query_result_
+ResultSet	DB_Api.h	/^	void *ResultSet;$/;"	m	struct:db_query_result_
+SIZE_OF_DB_QUERY_RESULT	DB_Api.h	67;"	d
+SIZE_OF_FIELD_CACHE	DB_Api.h	61;"	d
+TableCacheList	DB_Api.h	/^} TableCacheList;$/;"	t	typeref:struct:table_cache_list_
+TableName	DB_Api.h	/^	char            TableName[128];$/;"	m	struct:table_cache_list_
+TableSize	DB_Api.h	/^	int   TableSize;$/;"	m	struct:db_query_result_
+TotalSize	DB_Api.h	/^	int             TotalSize;$/;"	m	struct:table_cache_list_
+Tracer	DB_Api.c	21;"	d	file:
 Tracer	main.c	3;"	d	file:
-TracerNumber	DB_Api.c	26;"	d	file:
+TracerNumber	DB_Api.c	22;"	d	file:
 _DB_API_H_	DB_Api.h	3;"	d
 __DBApiCheckSQLReturn	DB_Api.c	/^static SQLINTEGER __DBApiCheckSQLReturn(SQLSMALLINT hType,$/;"	f	file:
 __DBApiFreeHandle	DB_Api.c	/^static SQLINTEGER __DBApiFreeHandle(SQLSMALLINT hType, SQLHANDLE hHandle)$/;"	f	file:
+__DBGetColsInfo	DB_Api.c	/^SQLINTEGER __DBGetColsInfo(SQLHSTMT hStmt, TableCacheList *pTableInfo)$/;"	f
 __tracer	DB_Api.c	/^void __tracer(const char *file, int line, const char *func, const char *str)$/;"	f
 __tracerNumber	DB_Api.c	/^void __tracerNumber(const char *file, int line, const char *func, const int v)$/;"	f
-false	DB_Api.h	16;"	d
+db_query_result_	DB_Api.h	/^typedef struct db_query_result_ {$/;"	s
 false	DB_Api.h	17;"	d
+false	DB_Api.h	18;"	d
+filde_cache_list_	DB_Api.h	/^typedef struct filde_cache_list_ {$/;"	s
 ghDbc	DB_Api.c	/^SQLHANDLE ghDbc = NULL;$/;"	v
 ghEnv	DB_Api.c	/^SQLHANDLE ghEnv = NULL;$/;"	v
 ghStmt	DB_Api.c	/^SQLHANDLE ghStmt = NULL;$/;"	v
 main	main.c	/^int main()$/;"	f
-true	DB_Api.h	11;"	d
+table_cache_list_	DB_Api.h	/^typedef struct table_cache_list_ {$/;"	s
 true	DB_Api.h	12;"	d
+true	DB_Api.h	13;"	d
 writelog	DB_Api.c	/^void writelog(const char *fmt, ...)$/;"	f
