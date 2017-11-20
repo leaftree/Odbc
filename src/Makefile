@@ -1,4 +1,4 @@
-CC = gcc -g3
+CC = gcc -g3 -Wall
 
 CCCOLOR   = "\033[33m"
 LINKCOLOR = "\033[34;1m"
@@ -17,8 +17,8 @@ QUIET_PROC=$(QUIET_CC)$(CC)
 QUIET_EXEC=$(QUIET_EXE)exec
 QUIET_REMOVE=$(QUIET_RM)rm -f
 
-inc += DB_Api.h
-src  = DB_Api.c main.c
+inc += DB_Api.h Log.h main.h
+src  = DB_Api.c Log.c main.c
 
 obj  = Main
 
@@ -37,4 +37,4 @@ tags:$(src) $(inc)
 
 .PHONY:clean
 clean:
-	$(QUIET_REMOVE) -f $(obj)
+	$(QUIET_REMOVE) -f $(obj) core.*

@@ -1,6 +1,8 @@
 
-#include "DB_Api.h"
+#include "main.h"
+#include <rpc/types.h>
 #define Tracer(str) __tracer(__FILE__, __LINE__, __func__, str)
+#define TracerNumber(v) __tracerNumber(__FILE__, __LINE__, __func__, v)
 
 #if 0
 static void ListDSN(SQLHANDLE hEnv);
@@ -270,9 +272,14 @@ void ListDSN(SQLHANDLE hEnv)
 
 #include "DB_Api.h"
 
-extern SQLHANDLE ghEnv ;
-extern SQLHANDLE ghDbc ;
-extern SQLHANDLE ghStmt ;
+typedef struct {
+    char caLineId[3];
+    char caStationId[5];
+    char caCNName[65];
+    char caENName[65];
+    char caLocationType[3];
+    char caLocationValue[5];
+} ST_BASI_STATION_INFO_extbl;
 
 int main()
 {
@@ -284,15 +291,16 @@ int main()
 
     SQLCHAR caSqlStmt[1024] = "";
 
+    int i=0;
+    ST_BASI_STATION_INFO_extbl stBSI;
+
     if(DBOP_NO == DBApiInitEnv(&hEnv, &hDbc))
     {
 			Tracer("DBApiInitEnv");
         return 1;
     }
-    ghEnv = hEnv;
-    ghDbc = hDbc;
 
-    if(DBOP_NO == DBApiConnectDatabase(&hDbc, "MySQL", "root", "123kbc,./"))
+    if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"root", (u_char*)"123kbc,./"))
     {
 			Tracer("DBApiConnectDatabase");
         return 1;
@@ -302,21 +310,28 @@ int main()
     {
         return 1;
     }
-    ghStmt = hStmt;
 
     Tracer("DBApiExecSQL beg");
-    sprintf(caSqlStmt, "use fyl");
+    sprintf((char*)caSqlStmt, "%s", "use fyl");
+
     if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
     {
         return 1;
     }
-    Tracer("DBApiExecSQL end");
+    //DBApiFreeStmt(hStmt);
 
-    sprintf(caSqlStmt, "select * from BASI_STATION_INFO ");
-		DBQueryResult stDbQueryHandle;
+    int ll=1000;
+    while(ll--)
+    {
+    if(DBOP_NO == DBApiPreExecSQL(hDbc, &hStmt))
+    {
+        return 1;
+    }
 
-		void *xp = malloc(1000);
-		iRet = DBApiQuery( hStmt,  caSqlStmt, &stDbQueryHandle, xp);
+    sprintf((char*)caSqlStmt, "%s", "select * from BASI_STATION_INFO ");
+		DBQueryResult *pstDbQueryHandle ;
+
+		iRet = DBApiQuery( hStmt,  caSqlStmt, &pstDbQueryHandle);
 		if(iRet != DBOP_OK)
 		{
 			Tracer("fail to query data");
@@ -324,13 +339,36 @@ int main()
 
 		Tracer("end to query data");
 
-		Tracer("DBApiFreeStmt");
+    //LogDumpHex("LogDumpHex", pstDbQueryHandle->ResultSet, pstDbQueryHandle->ResultCounter*pstDbQueryHandle->TableSize);
+    for(i=0; i<pstDbQueryHandle->ResultCounter; i++)
+    {
+        memcpy(&stBSI, pstDbQueryHandle->ResultSet+i*pstDbQueryHandle->TableSize, pstDbQueryHandle->TableSize);
+
+        fprintf(stdout, "LINE_ID          [%s]\n", stBSI.caLineId);
+        fprintf(stdout, "STATION_ID       [%s]\n", stBSI.caStationId);
+        fprintf(stdout, "STATION_CN_NAME  [%s]\n", stBSI.caCNName);
+        fprintf(stdout, "STATION_EN_NAME  [%s]\n", stBSI.caENName);
+        fprintf(stdout, "LOCATION_TYPE    [%s]\n", stBSI.caLocationType);
+        fprintf(stdout, "LOCATION_ID      [%s]\n", stBSI.caLocationValue);
+        printf("---------------------------------------------------------\n");
+    }
+    free(pstDbQueryHandle->ResultSet);
+pstDbQueryHandle->ResultSet=NULL;
+    free(pstDbQueryHandle);
+pstDbQueryHandle=NULL;
     DBApiFreeStmt(hStmt);
-		Tracer("DBApiDisConnectDatabase");
+    fprintf(stdout, "Fyl Test Sleep one second\n");
+    //sleep(1);
+    struct timespec ts = { 0, 5000 };
+    nanosleep(&ts, &ts);
+    }
+		Tracer("Display results end");
+
+    //free(pstDbQueryHandle->ResultSet);
+    //free(pstDbQueryHandle);
+    DBApiFreeStmt(hStmt);
     DBApiDisConnectDatabase(hDbc);
-		Tracer("DBApiFreeDbc");
     DBApiFreeDbc(hDbc);
-		Tracer("DBApiFreeEnv");
     DBApiFreeEnv(hEnv);
 
     Tracer("Main End");

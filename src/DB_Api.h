@@ -2,11 +2,9 @@
 #ifndef _DB_API_H_
 #define _DB_API_H_ 1
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <malloc.h>
-
 #include <sqlext.h>
+
+#include "main.h"
 
 #ifdef true
 # undef true
@@ -67,9 +65,11 @@ typedef struct db_query_result_ {
 #define SIZE_OF_DB_QUERY_RESULT() \
 	(sizeof(DBQueryResult))
 
-#define NEW_DB_QUERY_RESULT(dbres, nmemb, size) \
-	(dbres=(void*)malloc(SIZE_OF_DB_QUERY_RESULT()+nmemb*size))
+/*#define NEW_DB_QUERY_RESULT(dbres, nmemb, size) \
+	(dbres=(void*)malloc(SIZE_OF_DB_QUERY_RESULT()+(nmemb)*(size)))
+	*/
 
+void *NEW_DB_QUERY_RESULT(int nmemb, int size);
 
 SQLINTEGER DBApiInitEnv(SQLHENV *hEnv,
 	                    	SQLHDBC *hDbc);
@@ -93,11 +93,9 @@ SQLINTEGER DBApiFreeDbc(SQLHDBC hDbc);
 
 SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt);
 
-/*
 SQLINTEGER DBApiQuery(SQLHSTMT        hStmt,
-		                  SQLCHAR       *pcaSqlStmt,
-		                  DBQueryResult *pDBQueryRes);
-											*/
+		                  SQLCHAR        *pcaSqlStmt,
+		                  DBQueryResult **pDBQueryRes);
 
 SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
                              SQLHANDLE   hHandle,
