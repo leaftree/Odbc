@@ -12,6 +12,10 @@
 #include <sys/param.h>
 
 #include "Log.h"
+#include "List.h"
 #include "DB_Api.h"
+
+void __tracer(const char *file, int line, const char *func, const char *str);
+void __tracerNumber(const char *file, int line, const char *func, const int v);
 
 #endif /*__MAIN_H__*/

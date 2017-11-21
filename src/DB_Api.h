@@ -49,11 +49,15 @@ typedef struct table_cache_list_ {
 	FieldCacheList *FieldList;
 } TableCacheList;
 
+typedef struct db_row_data_ {
+	struct list_head  list;
+	void             *value;
+} DBRow;
+
 typedef struct db_query_result_ {
-	int   TableSize;
-	int   ResultCounter;
-	void *CurrentPosition;
-	void *ResultSet;
+	int               TableSize;
+	int               ResultCounter;
+	struct list_head *root;
 } DBQueryResult;
 
 #define SIZE_OF_FIELD_CACHE(field) \
@@ -65,11 +69,29 @@ typedef struct db_query_result_ {
 #define SIZE_OF_DB_QUERY_RESULT() \
 	(sizeof(DBQueryResult))
 
-/*#define NEW_DB_QUERY_RESULT(dbres, nmemb, size) \
-	(dbres=(void*)malloc(SIZE_OF_DB_QUERY_RESULT()+(nmemb)*(size)))
-	*/
+#define INIT_ONE_LIST_ROOT(root) LIST_HEAD(root)
 
-void *NEW_DB_QUERY_RESULT(int nmemb, int size);
+#define INSERT_ONE_RECORD_INTO_LIST(ptr, root) \
+	list_add((ptr)->Root.list, &(root))
+
+/*
+#define INSERT_ONE_RECORD_INTO_LIST_TAIL(ptr, root) \
+	list_add_tail(&((ptr)->Root).list, &(root))
+	*/
+#define INSERT_ONE_RECORD_INTO_LIST_TAIL(new, root) \
+	list_add_tail(&((new)->list), &(root))
+
+#define DELETE_ONE_RECORD_FROM_LIST(ptr) \
+	list_del(&((ptr)->Root).list)
+
+#define DB_INIT_POS(pos) DBRow *pos
+
+#define DB_FOREACH_ENTRY(pos, root) \
+	list_for_each_entry(pos, &(root), list)
+
+#define NEW_DB_QUERY_RESULT(name, list) DBQueryResult name = {0, 0, .root = &list}
+
+//void *NEW_DB_QUERY_RESULT(int nmemb, int size);
 
 SQLINTEGER DBApiInitEnv(SQLHENV *hEnv,
 	                    	SQLHDBC *hDbc);

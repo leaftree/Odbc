@@ -17,24 +17,28 @@ QUIET_PROC=$(QUIET_CC)$(CC)
 QUIET_EXEC=$(QUIET_EXE)exec
 QUIET_REMOVE=$(QUIET_RM)rm -f
 
-inc += DB_Api.h Log.h main.h
-src  = DB_Api.c Log.c main.c
+inc += DB_Api.h Log.h main.h List.h
+src  = DB_Api.c Log.c main.c List.c
+obj  = DB_Api.o Log.o main.o List.o
 
-obj  = Main
+bin  = Main
 
 lib += -lodbc
 
-all:$(obj)
+all:$(bin)
 
-$(obj):$(src) $(inc)
-	$(QUIET_PROC) $(src) $(lib) -o $(obj)
+$(bin):$(obj) $(inc)
+	$(QUIET_PROC) $(obj) $(lib) -o $(bin)
 
-run:$(obj)
-	$(QUIET_EXEC) $(PWD)/$(obj)
+.c.o:$(src)
+	$(QUIET_PROC) -c $<
+
+run:$(obj) $(bin)
+	$(QUIET_EXEC) $(PWD)/$(bin)
 
 tags:$(src) $(inc)
 	-@ctags $(src) $(inc)
 
 .PHONY:clean
 clean:
-	$(QUIET_REMOVE) -f $(obj) core.*
+	$(QUIET_REMOVE) -f $(obj) $(bin) *.gch core.*

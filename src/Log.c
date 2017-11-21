@@ -10,7 +10,7 @@ void LogDumpHex(const char *pTitle, const char *pMem, unsigned int size)
     unsigned int TOTAL_SIZE = size;
     const char *pDumpMem = pMem;
     const char *pDumpTitle = pTitle;
-    char szAsciiCode[16*3] = "";
+    char szAsciiCode[24] = "";
     char chBtye;
 
     if(!pDumpMem || TOTAL_SIZE<1)
@@ -28,7 +28,7 @@ void LogDumpHex(const char *pTitle, const char *pMem, unsigned int size)
         if(y==Y_line-1)
             X_line = TOTAL_SIZE%LINE_BYTE;
 
-        fprintf(stdout, "%06X(%06d) ", y*LINE_BYTE, y*LINE_BYTE);
+        fprintf(stdout, "%06X(%04d): ", y*LINE_BYTE, y);
 
         for(x=0; x<X_line; x++)
         {

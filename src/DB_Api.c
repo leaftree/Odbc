@@ -1,5 +1,4 @@
-#include "DB_Api.h"
-#include <malloc.h>
+#include "main.h"
 
 SQLHANDLE ghEnv = NULL;
 SQLHANDLE ghDbc = NULL;
@@ -102,7 +101,7 @@ SQLINTEGER DBApiInitEnv(SQLHENV *hEnv, SQLHDBC *hDbc)
 {
     SQLRETURN iRet = SQL_SUCCESS;
 
-    SQLCHAR caMessageText[1024*4] = "";
+    //SQLCHAR caMessageText[1024*4] = "";
 
     //SQLHENV hEnv  = NULL;
     //SQLHDBC hDbc  = NULL;
@@ -289,10 +288,12 @@ SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DBQueryResult **pDBQu
         goto err;
     }
 
+    /*
     if(NULL==(pstDBQueryRes=NEW_DB_QUERY_RESULT(iRowCnt, stTableList.TotalSize)))
     {
         goto err;
     }
+    */
 
     SQLLEN iRealSize = 0;
     SQLCHAR caColVal[100] = "";
@@ -326,15 +327,19 @@ SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DBQueryResult **pDBQu
             {
                 break;
             }
+            /*
             memcpy(pstDBQueryRes->ResultSet+iResOfs, (void*)caColVal, iRealSize);
             iResOfs += (iFieldMaxSize+1);
+            */
         }
     }
     TracerNumber(stTableList.TotalSize);
 
+    /*
     *pDBQueryRes = pstDBQueryRes;
     (*pDBQueryRes)->ResultCounter   = iRowCnt;
     (*pDBQueryRes)->TableSize       = stTableList.TotalSize;
+    */
 
     FREE(stTableList.FieldList);
 
@@ -393,6 +398,7 @@ SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
     return DBOP_OK;
 }
 
+/*
 void *NEW_DB_QUERY_RESULT(int nmemb, int size)
 {
     DBQueryResult *p = NULL;
@@ -401,4 +407,4 @@ void *NEW_DB_QUERY_RESULT(int nmemb, int size)
     memset(p->ResultSet, 0x0, nmemb*size);
     return p;
 }
-
+*/
