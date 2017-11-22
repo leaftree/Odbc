@@ -30,7 +30,7 @@ all:$(bin)
 $(bin):$(obj) $(inc)
 	$(QUIET_PROC) $(obj) $(lib) -o $(bin)
 
-.c.o:$(src)
+.c.o:$(src) $(inc)
 	$(QUIET_PROC) -c $<
 
 run:$(obj) $(bin)

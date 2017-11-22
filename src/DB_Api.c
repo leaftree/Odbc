@@ -101,11 +101,6 @@ SQLINTEGER DBApiInitEnv(SQLHENV *hEnv, SQLHDBC *hDbc)
 {
     SQLRETURN iRet = SQL_SUCCESS;
 
-    //SQLCHAR caMessageText[1024*4] = "";
-
-    //SQLHENV hEnv  = NULL;
-    //SQLHDBC hDbc  = NULL;
-
     iRet = SQLAllocHandle(SQL_HANDLE_ENV, NULL, hEnv);
     if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_ENV, *hEnv, iRet))
     {
@@ -116,6 +111,9 @@ SQLINTEGER DBApiInitEnv(SQLHENV *hEnv, SQLHDBC *hDbc)
      * Set ODBC as Version-3 to support more api
      */
     SQLSetEnvAttr(*hEnv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3,
+            SQL_IS_INTEGER);
+
+    SQLSetEnvAttr(*hEnv, SQL_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF,
             SQL_IS_INTEGER);
 
     iRet = SQLAllocHandle(SQL_HANDLE_DBC, *hEnv, hDbc);
@@ -407,4 +405,42 @@ void *NEW_DB_QUERY_RESULT(int nmemb, int size)
     memset(p->ResultSet, 0x0, nmemb*size);
     return p;
 }
+*/
+
+//#define ITER_AUTO(type) struct list_head *type
+
+/*
+static inline struct list_head *begin(DBQueryResult *dbqr)
+{
+    dbqr->iter = dbqr->root->next;
+    return dbqr->iter;
+}
+
+static inline struct list_head *next(DBQueryResult *dbqr)
+{
+    dbqr->iter = dbqr->iter->next;
+    return dbqr->iter;
+}
+
+static inline struct list_head *end(DBQueryResult *dbqr)
+{
+    return dbqr->root;
+}
+
+static inline void *fetch(struct list_head *iter)
+{
+    return list_entry(iter, DBRow, list);
+}
+
+void InitDbQueryResult(DBQueryResult *dbqr)
+{
+    dbqr->TableSize     = 0;
+    dbqr->ResultCounter = 0;
+    dbqr->begin         = begin;
+    dbqr->next          = next;
+    dbqr->end           = end;
+    dbqr->fetch         = fetch;
+    return;
+}
+
 */

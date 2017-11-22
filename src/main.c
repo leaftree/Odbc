@@ -281,6 +281,7 @@ typedef struct {
     char caLocationValue[5];
 } ST_BASI_STATION_INFO_extbl;
 
+#if 0
 int main()
 {
     SQLRETURN iRet = SQL_SUCCESS;
@@ -339,11 +340,10 @@ int main()
 
         Tracer("end to query data");
 
-        /*
         //LogDumpHex("LogDumpHex", pstDbQueryHandle->ResultSet, pstDbQueryHandle->ResultCounter*pstDbQueryHandle->TableSize);
         for(i=0; i<pstDbQueryHandle->ResultCounter; i++)
         {
-            memcpy(&stBSI, pstDbQueryHandle->ResultSet+i*pstDbQueryHandle->TableSize, pstDbQueryHandle->TableSize);
+            //memcpy(&stBSI, pstDbQueryHandle->ResultSet+i*pstDbQueryHandle->TableSize, pstDbQueryHandle->TableSize);
 
             fprintf(stdout, "LINE_ID          [%s]\n", stBSI.caLineId);
             fprintf(stdout, "STATION_ID       [%s]\n", stBSI.caStationId);
@@ -353,11 +353,10 @@ int main()
             fprintf(stdout, "LOCATION_ID      [%s]\n", stBSI.caLocationValue);
             printf("---------------------------------------------------------\n");
         }
-        free(pstDbQueryHandle->ResultSet);
-        pstDbQueryHandle->ResultSet=NULL;
+        //free(pstDbQueryHandle->ResultSet);
+        //pstDbQueryHandle->ResultSet=NULL;
         free(pstDbQueryHandle);
         pstDbQueryHandle=NULL;
-        */
 
         DBApiFreeStmt(hStmt);
     }
@@ -372,7 +371,6 @@ int main()
 
     Tracer("Main End");
 
-    testsuit();
-
     return 0;
 }
+#endif

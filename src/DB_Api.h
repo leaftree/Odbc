@@ -36,27 +36,44 @@
 # define DB_NO_DATA (NOT_FOUND)
 #endif
 
-typedef struct filde_cache_list_ {
+/**
+ * 字段域信息
+ */
+typedef struct filde_list_ {
 	int  FieldSize;
 	int  FieldType;
 	char FieldName[128];
 } FieldCacheList;
 
-typedef struct table_cache_list_ {
+/**
+ * 表结构信息
+ */
+typedef struct table_list_ {
 	int             TotalSize;
 	int             FieldCounter;
 	char            TableName[128];
 	FieldCacheList *FieldList;
 } TableCacheList;
 
+/**
+ * 库表行记录
+ */
 typedef struct db_row_data_ {
 	struct list_head  list;
 	void             *value;
 } DBRow;
 
+/**
+ * 库表查询结果集合
+ */
 typedef struct db_query_result_ {
 	int               TableSize;
 	int               ResultCounter;
+	struct list_head *(*begin)(struct db_query_result_*);
+	struct list_head *(*next) (struct db_query_result_*);
+	struct list_head *(*end)  (struct db_query_result_*);
+	void             *(*fetch)(struct list_head*);
+	struct list_head *iter;
 	struct list_head *root;
 } DBQueryResult;
 
