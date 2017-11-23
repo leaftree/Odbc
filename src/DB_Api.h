@@ -36,6 +36,7 @@
 # define DB_NO_DATA (NOT_FOUND)
 #endif
 
+#if 0
 /**
  * ◊÷∂Œ”Ú–≈œ¢
  */
@@ -44,7 +45,7 @@ typedef struct FILDE_ATTR
 	int              nFieldSize;
 	int              nFieldType;
 	char             szFieldName[128];
-	struct list_head *pList;
+	struct list_head List;
 } FIELD_ATTR;
 
 /**
@@ -79,6 +80,7 @@ typedef struct DB_QUERY_RESULT_SET
 	SQLHDBC           hDbc;
 	SQLHSTMT          hStmt;
 } DB_QUERY_RESULT_SET;
+#endif
 
 #define SIZE_OF_FIELD_CACHE(field) \
 	(sizeof(TableCacheList))
@@ -127,9 +129,11 @@ SQLINTEGER DBApiFreeDbc(SQLHDBC hDbc);
 
 SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt);
 
+/*
 SQLINTEGER DBApiQuery(SQLHSTMT             hStmt,
 		                  SQLCHAR             *pcaSqlStmt,
 		                  DB_QUERY_RESULT_SET *pDBQueryRes);
+											*/
 
 SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
                              SQLHANDLE   hHandle,

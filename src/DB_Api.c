@@ -182,190 +182,190 @@ SQLINTEGER DBApiExecSQL(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt)
     return DBOP_OK;
 }
 
-FIELD_ATTR *__DBNewFieldAttrNode(SQLINTEGER nSize, SQLINTEGER nType, SQLCHAR *pszName)
-{
-    FIELD_ATTR *pField = malloc(sizeof(FIELD_ATTR));
-    struct list_head *list = malloc(sizeof(struct list_head));
-
-    pField->nFieldSize = nSize;
-    pField->nFieldType = nType;
-    sprintf(pField->szFieldName, "%s", pszName);
-    pField->pList = list;
-
-    INIT_LIST_HEAD(pField->pList);
-
-    return pField;
-}
-
-SQLINTEGER __DBGetColsInfo(SQLHSTMT hStmt, DB_QUERY_RESULT_SET *pTableInfo)
-{
-    SQLRETURN   nRet       = SQL_SUCCESS;
-    SQLINTEGER  nTotalSize = 0;
-    SQLSMALLINT nLoop      = 0;
-    SQLSMALLINT nColCnt    = 0;
-
-    SQLULEN     nColSize       = 0;
-    SQLCHAR     szColName[100] = "";
-    SQLSMALLINT nColAttrLen    = 0;
-    SQLSMALLINT nColType       = 0;
-    SQLSMALLINT nColDecDigit   = 0;
-    SQLSMALLINT nColNullable   = 0;
-
-    FIELD_ATTR *pFieldAttr = malloc(sizeof(FIELD_ATTR));
-    struct list_head *list = malloc(sizeof(struct list_head));
-
-    INIT_LIST_HEAD(list);
-    pFieldAttr->pList = list;
-
-    nRet = SQLNumResultCols(hStmt, &nColCnt);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
-    {
-        return DBOP_NO;
-    }
-
-    if(nColCnt==0)
-    {
-        return DBOP_NO;
-    }
-
-    for(nLoop=1; nLoop<=nColCnt; nLoop++)
-    {
-        nRet = SQLDescribeCol(hStmt,
-                nLoop,
-                szColName,
-                sizeof(szColName),
-                &nColAttrLen,
-                &nColType,
-                &nColSize,
-                &nColDecDigit,
-                &nColNullable);
-
-        if(nRet == SQL_ERROR)
-        {
-            goto err;
-        }
-
-        FIELD_ATTR *field = __DBNewFieldAttrNode(nColSize, nColType, szColName);
-        list_add_tail(field->pList, pFieldAttr->pList);
-
-        nTotalSize += nColSize;
-    }
-    pTableInfo->TableStruct.nTotalSize = nTotalSize;
-    pTableInfo->TableStruct.nFieldCounter = nColCnt;
-    pTableInfo->TableStruct.pFieldAttrList = pFieldAttr;
-
-    return DBOP_OK;
-
-err:
-    // TODO free
-    return DBOP_NO;
-}
-
-SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DB_QUERY_RESULT_SET *pDBQueryRes)
-{
-    SQLRETURN   nRet    = SQL_SUCCESS;
-    SQLLEN      iRowCnt = 0; /* Row counter of query result     */
-    SQLSMALLINT nColCnt = 0; /* Columns counter of query result */
-    SQLINTEGER  iResOfs = 0;
-
-    /*
-    db_query_result_set stTableList = {
-        .TotalSize    = 0,
-        .FieldCounter = 0,
-        .field_attr_list    = NULL,
-    };
-    */
-
-    //DBQueryResult *pstDBQueryRes = NULL;
-
-    nRet = SQLExecDirect(hStmt, pcaSqlStmt, SQL_NTS);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
-    {
-        return DBOP_NO;
-    }
-
-    if(DBOP_OK != __DBGetColsInfo(hStmt, pDBQueryRes))
-    {
-        return DBOP_NO;
-    }
- //   nColCnt = stTableList.FieldCounter;
-
-    nRet = SQLRowCount(hStmt, &iRowCnt);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
-    {
-        goto err;
-    }
-
-    FIELD_ATTR *tmp;
-    struct list_head *pos;
-
-    list_for_each(pos, pDBQueryRes->TableStruct.pFieldAttrList->pList)
-    {
-        tmp = list_entry(pos, FIELD_ATTR, pList);
-        printf("nFieldSize=%d nFieldType=%d szFieldName=%s\n",
-                tmp->nFieldSize, tmp->nFieldType, tmp->szFieldName);
-    }
-
-    return 0;
-
-    SQLLEN iRealSize = 0;
-    SQLCHAR caColVal[100] = "";
-    for(;;)
-    {
-        nRet =  SQLFetch(hStmt);
-
-        if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
-        {
-            if(nRet == SQL_ERROR)
-                break;
-        }
-        else if(nRet == SQL_NO_DATA)
-        {
-            break;
-        }
-
-        SQLSMALLINT iColLoop;
-        SQLSMALLINT iFieldMaxSize = 0;
-        for(iColLoop=1; iColLoop <= nColCnt; iColLoop++)
-        {
-     //       iFieldMaxSize = (stTableList.field_attr_list+iColLoop-1)->FieldSize;
-            nRet = SQLGetData(hStmt, iColLoop, SQL_C_CHAR, caColVal, 100, &iRealSize);
-            TracerNumber(nRet);
-
-            if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
-            {
-                if(nRet == SQL_ERROR)
-                    break;
-            }
-            else if(nRet == SQL_NO_DATA)
-            {
-                break;
-            }
-            printf("%s ", caColVal);
-            /*
-            memcpy(pstDBQueryRes->ResultSet+iResOfs, (void*)caColVal, iRealSize);
-            iResOfs += (iFieldMaxSize+1);
-            */
-        }
-    }
-    Tracer("\n");
-    //TracerNumber(stTableList.TotalSize);
-
-    /*
-    *pDBQueryRes = pstDBQueryRes;
-    (*pDBQueryRes)->ResultCounter   = iRowCnt;
-    (*pDBQueryRes)->TableSize       = stTableList.TotalSize;
-    */
-
-    //FREE(stTableList.field_attr_list);
-
-    return DBOP_OK;
-
-err:
-    //FREE(stTableList.field_attr_list);
-    return DBOP_NO;
-}
-
+//FIELD_ATTR *__DBNewFieldAttrNode(SQLINTEGER nSize, SQLINTEGER nType, SQLCHAR *pszName)
+//{
+//    FIELD_ATTR *pField = malloc(sizeof(FIELD_ATTR));
+//    struct list_head *list = malloc(sizeof(struct list_head));
+//
+//    pField->nFieldSize = nSize;
+//    pField->nFieldType = nType;
+//    sprintf(pField->szFieldName, "%s", pszName);
+//    pField->pList = list;
+//
+//    INIT_LIST_HEAD(pField->pList);
+//
+//    return pField;
+//}
+//
+//SQLINTEGER __DBGetColsInfo(SQLHSTMT hStmt, DB_QUERY_RESULT_SET *pTableInfo)
+//{
+//    SQLRETURN   nRet       = SQL_SUCCESS;
+//    SQLINTEGER  nTotalSize = 0;
+//    SQLSMALLINT nLoop      = 0;
+//    SQLSMALLINT nColCnt    = 0;
+//
+//    SQLULEN     nColSize       = 0;
+//    SQLCHAR     szColName[100] = "";
+//    SQLSMALLINT nColAttrLen    = 0;
+//    SQLSMALLINT nColType       = 0;
+//    SQLSMALLINT nColDecDigit   = 0;
+//    SQLSMALLINT nColNullable   = 0;
+//
+//    FIELD_ATTR *pFieldAttr = malloc(sizeof(FIELD_ATTR));
+//    struct list_head *list = malloc(sizeof(struct list_head));
+//
+//    INIT_LIST_HEAD(list);
+//    pFieldAttr->pList = list;
+//
+//    nRet = SQLNumResultCols(hStmt, &nColCnt);
+//    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
+//    {
+//        return DBOP_NO;
+//    }
+//
+//    if(nColCnt==0)
+//    {
+//        return DBOP_NO;
+//    }
+//
+//    for(nLoop=1; nLoop<=nColCnt; nLoop++)
+//    {
+//        nRet = SQLDescribeCol(hStmt,
+//                nLoop,
+//                szColName,
+//                sizeof(szColName),
+//                &nColAttrLen,
+//                &nColType,
+//                &nColSize,
+//                &nColDecDigit,
+//                &nColNullable);
+//
+//        if(nRet == SQL_ERROR)
+//        {
+//            goto err;
+//        }
+//
+//        FIELD_ATTR *field = __DBNewFieldAttrNode(nColSize, nColType, szColName);
+//        list_add_tail(field->pList, pFieldAttr->pList);
+//
+//        nTotalSize += nColSize;
+//    }
+//    pTableInfo->TableStruct.nTotalSize = nTotalSize;
+//    pTableInfo->TableStruct.nFieldCounter = nColCnt;
+//    pTableInfo->TableStruct.pFieldAttrList = pFieldAttr;
+//
+//    return DBOP_OK;
+//
+//err:
+//    // TODO free
+//    return DBOP_NO;
+//}
+//
+//SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DB_QUERY_RESULT_SET *pDBQueryRes)
+//{
+//    SQLRETURN   nRet    = SQL_SUCCESS;
+//    SQLLEN      iRowCnt = 0; /* Row counter of query result     */
+//    SQLSMALLINT nColCnt = 0; /* Columns counter of query result */
+//    SQLINTEGER  iResOfs = 0;
+//
+//    /*
+//    db_query_result_set stTableList = {
+//        .TotalSize    = 0,
+//        .FieldCounter = 0,
+//        .field_attr_list    = NULL,
+//    };
+//    */
+//
+//    //DBQueryResult *pstDBQueryRes = NULL;
+//
+//    nRet = SQLExecDirect(hStmt, pcaSqlStmt, SQL_NTS);
+//    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
+//    {
+//        return DBOP_NO;
+//    }
+//
+//    if(DBOP_OK != __DBGetColsInfo(hStmt, pDBQueryRes))
+//    {
+//        return DBOP_NO;
+//    }
+// //   nColCnt = stTableList.FieldCounter;
+//
+//    nRet = SQLRowCount(hStmt, &iRowCnt);
+//    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
+//    {
+//        goto err;
+//    }
+//
+//    FIELD_ATTR *tmp;
+//    struct list_head *pos;
+//
+//    list_for_each(pos, pDBQueryRes->TableStruct.pFieldAttrList->pList)
+//    {
+//        tmp = list_entry(pos, FIELD_ATTR, pList);
+//        printf("nFieldSize=%d nFieldType=%d szFieldName=%s\n",
+//                tmp->nFieldSize, tmp->nFieldType, tmp->szFieldName);
+//    }
+//
+//    return 0;
+//
+//    SQLLEN iRealSize = 0;
+//    SQLCHAR caColVal[100] = "";
+//    for(;;)
+//    {
+//        nRet =  SQLFetch(hStmt);
+//
+//        if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
+//        {
+//            if(nRet == SQL_ERROR)
+//                break;
+//        }
+//        else if(nRet == SQL_NO_DATA)
+//        {
+//            break;
+//        }
+//
+//        SQLSMALLINT iColLoop;
+//        SQLSMALLINT iFieldMaxSize = 0;
+//        for(iColLoop=1; iColLoop <= nColCnt; iColLoop++)
+//        {
+//     //       iFieldMaxSize = (stTableList.field_attr_list+iColLoop-1)->FieldSize;
+//            nRet = SQLGetData(hStmt, iColLoop, SQL_C_CHAR, caColVal, 100, &iRealSize);
+//            TracerNumber(nRet);
+//
+//            if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
+//            {
+//                if(nRet == SQL_ERROR)
+//                    break;
+//            }
+//            else if(nRet == SQL_NO_DATA)
+//            {
+//                break;
+//            }
+//            printf("%s ", caColVal);
+//            /*
+//            memcpy(pstDBQueryRes->ResultSet+iResOfs, (void*)caColVal, iRealSize);
+//            iResOfs += (iFieldMaxSize+1);
+//            */
+//        }
+//    }
+//    Tracer("\n");
+//    //TracerNumber(stTableList.TotalSize);
+//
+//    /*
+//    *pDBQueryRes = pstDBQueryRes;
+//    (*pDBQueryRes)->ResultCounter   = iRowCnt;
+//    (*pDBQueryRes)->TableSize       = stTableList.TotalSize;
+//    */
+//
+//    //FREE(stTableList.field_attr_list);
+//
+//    return DBOP_OK;
+//
+//err:
+//    //FREE(stTableList.field_attr_list);
+//    return DBOP_NO;
+//}
+//
 SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
         SQLHANDLE   hHandle,
         SQLCHAR     *pcaMsgText)
@@ -414,6 +414,7 @@ SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
     return DBOP_OK;
 }
 
+#if 0
 SQLINTEGER DBApiQueryInit(DB_QUERY_RESULT_SET *pDbQrs, SQLHDBC hDbc)
 {
     struct list_head *root = malloc(sizeof(struct list_head));
@@ -457,3 +458,4 @@ SQLINTEGER DBApiQueryFree(DB_QUERY_RESULT_SET *pDbQrs)
     //pDbQrs->ListRoot;
     return DBOP_OK;
 }
+#endif

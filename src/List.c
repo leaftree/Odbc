@@ -2,45 +2,84 @@
 #include <stdlib.h>
 #include "main.h"
 
-/*
-DBRow * new_list_node(void *data, size_t len)
+/**
+ * 字段域信息
+ */
+typedef struct FILDE_ATTR
 {
-    DBRow *row = malloc(sizeof(DBRow));
-    row->value = calloc(1, len);
-    memcpy(row->value, data, len);
-    INIT_LIST_HEAD(&row->list);
+	int              nFieldSize;
+	int              nFieldType;
+	char             szFieldName[128];
+	struct list_head List;
+} FIELD_ATTR;
 
-    return row;
+/**
+ * 表结构信息
+ */
+typedef struct TABLE_INFO
+{
+	int         nTotalSize;
+	int         nFieldCounter;
+	char        szTableName[128];
+	FIELD_ATTR *pFieldAttrList;
+} TABLE_STRUCTURE;
+
+typedef struct list_head list_head;
+
+void *NewFieldAttrNode()
+{
+	FIELD_ATTR *new = malloc(sizeof(FIELD_ATTR));
+	if(!new)
+		return NULL;
+
+	new->nFieldSize = 0;
+	new->nFieldType = 0;
+	*new->szFieldName= 0;
+	INIT_LIST_HEAD(&new->List);
+
+	return new;
 }
-*/
 
-int xmain()
+int main()
 {
-    /*
-    DB_QUERY_RESULT_SET stDbQrs;
-    SQLHDBC hDbc;
-    DBApiQueryInit(&stDbQrs, &hDbc);
-    */
-    /*
+	list_head *root = malloc(sizeof(list_head));
+	INIT_LIST_HEAD(root);
 
-    DBRow *row = NULL;
-    row = new_list_node("abc", 4);
+	FIELD_ATTR *new = NULL;
 
-    list_add(&row->list, dbqr.root);
+	new = NewFieldAttrNode();
+	list_add_tail(&new->List, root);
+	new->nFieldSize = 10;
+	new->nFieldType = 2;
+	sprintf(new->szFieldName, "%s", "ShenSiYuan");
 
-    row = new_list_node("abcx", 4);
+	new = NewFieldAttrNode();
+	list_add_tail(&new->List, root);
+	new->nFieldSize = 110;
+	new->nFieldType = 2;
+	sprintf(new->szFieldName, "%s", "I love");
 
-    list_add(&row->list, dbqr.root);
+	struct list_head *pos;
+	FIELD_ATTR *field;
 
-    struct list_head *pos;
-    DBRow *tmp;
+	list_for_each(pos, root)
+	{
+		field = list_entry(pos, FIELD_ATTR, List);
+		printf("%d %d %s\n", field->nFieldSize, field->nFieldType, field->szFieldName);
 
-    list_for_each(pos, dbqr.root)
-    {
-        tmp = list_entry(pos, DBRow, list);
-        printf("%s\n", (char*)tmp->value);
-    }
-    */
+		list_del(pos);
+		free(field);
+	}
 
-    return 0;
+	printf("ssy\n");
+
+	list_for_each(pos, root)
+	{
+		field = list_entry(pos, FIELD_ATTR, List);
+		printf("%d %d %s\n", field->nFieldSize, field->nFieldType, field->szFieldName);
+	}
+
+	list_del(root);
+
+	return 0;
 }

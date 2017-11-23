@@ -375,6 +375,7 @@ int main()
 }
 #endif
 
+#if 0
 int main()
 {
     SQLRETURN iRet = SQL_SUCCESS;
@@ -426,3 +427,4 @@ int main()
     //DBApiFreeStmt(hStmt);
     return 0;
 }
+#endif
