@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "main.h"
 
+/*
 DBRow * new_list_node(void *data, size_t len)
 {
     DBRow *row = malloc(sizeof(DBRow));
@@ -11,17 +12,16 @@ DBRow * new_list_node(void *data, size_t len)
 
     return row;
 }
+*/
 
-int main()
+int xmain()
 {
-    LIST_HEAD(root);
-    INIT_LIST_HEAD(&root);
-
-    DBQueryResult dbqr = {
-        .TableSize = 0,
-        .ResultCounter = 0,
-        .root = &root,
-    };
+    /*
+    DB_QUERY_RESULT_SET stDbQrs;
+    SQLHDBC hDbc;
+    DBApiQueryInit(&stDbQrs, &hDbc);
+    */
+    /*
 
     DBRow *row = NULL;
     row = new_list_node("abc", 4);
@@ -40,6 +40,7 @@ int main()
         tmp = list_entry(pos, DBRow, list);
         printf("%s\n", (char*)tmp->value);
     }
+    */
 
     return 0;
 }

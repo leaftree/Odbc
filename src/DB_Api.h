@@ -39,43 +39,46 @@
 /**
  * 字段域信息
  */
-typedef struct filde_list_ {
-	int  FieldSize;
-	int  FieldType;
-	char FieldName[128];
-} FieldCacheList;
+typedef struct FILDE_ATTR
+{
+	int              nFieldSize;
+	int              nFieldType;
+	char             szFieldName[128];
+	struct list_head *pList;
+} FIELD_ATTR;
 
 /**
  * 表结构信息
  */
-typedef struct table_list_ {
-	int             TotalSize;
-	int             FieldCounter;
-	char            TableName[128];
-	FieldCacheList *FieldList;
-} TableCacheList;
+typedef struct TABLE_INFO
+{
+	int         nTotalSize;
+	int         nFieldCounter;
+	char        szTableName[128];
+	FIELD_ATTR *pFieldAttrList;
+} TABLE_STRUCTURE;
 
 /**
  * 库表行记录
  */
-typedef struct db_row_data_ {
-	struct list_head  list;
-	void             *value;
-} DBRow;
+typedef struct ROW_DATA
+{
+	struct list_head  List;
+	void             *pValue;
+} ROW_SET;
 
 /**
  * 库表查询结果集合
  */
-typedef struct db_query_result_ {
-	int               TableSize;
-	int               ResultCounter;
-	struct list_head *(*begin)(struct db_query_result_*);
-	struct list_head *(*next) (struct db_query_result_*);
-	struct list_head *(*end)  (struct db_query_result_*);
-	void             *(*fetch)(struct list_head*);
-	struct list_head *iter;
-	struct list_head *root;
-} DBQueryResult;
+typedef struct DB_QUERY_RESULT_SET
+{
+	struct list_head *ListRoot;
+	int               nTableSize;
+	int               nRowCounter;
+	TABLE_STRUCTURE   TableStruct;
+	SQLHDBC           hDbc;
+	SQLHSTMT          hStmt;
+} DB_QUERY_RESULT_SET;
 
 #define SIZE_OF_FIELD_CACHE(field) \
 	(sizeof(TableCacheList))
@@ -91,10 +94,6 @@ typedef struct db_query_result_ {
 #define INSERT_ONE_RECORD_INTO_LIST(ptr, root) \
 	list_add((ptr)->Root.list, &(root))
 
-/*
-#define INSERT_ONE_RECORD_INTO_LIST_TAIL(ptr, root) \
-	list_add_tail(&((ptr)->Root).list, &(root))
-	*/
 #define INSERT_ONE_RECORD_INTO_LIST_TAIL(new, root) \
 	list_add_tail(&((new)->list), &(root))
 
@@ -105,10 +104,6 @@ typedef struct db_query_result_ {
 
 #define DB_FOREACH_ENTRY(pos, root) \
 	list_for_each_entry(pos, &(root), list)
-
-#define NEW_DB_QUERY_RESULT(name, list) DBQueryResult name = {0, 0, .root = &list}
-
-//void *NEW_DB_QUERY_RESULT(int nmemb, int size);
 
 SQLINTEGER DBApiInitEnv(SQLHENV *hEnv,
 	                    	SQLHDBC *hDbc);
@@ -132,9 +127,9 @@ SQLINTEGER DBApiFreeDbc(SQLHDBC hDbc);
 
 SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt);
 
-SQLINTEGER DBApiQuery(SQLHSTMT        hStmt,
-		                  SQLCHAR        *pcaSqlStmt,
-		                  DBQueryResult **pDBQueryRes);
+SQLINTEGER DBApiQuery(SQLHSTMT             hStmt,
+		                  SQLCHAR             *pcaSqlStmt,
+		                  DB_QUERY_RESULT_SET *pDBQueryRes);
 
 SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
                              SQLHANDLE   hHandle,

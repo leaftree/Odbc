@@ -374,3 +374,55 @@ int main()
     return 0;
 }
 #endif
+
+int main()
+{
+    SQLRETURN iRet = SQL_SUCCESS;
+
+    SQLHENV  hEnv  = NULL;
+    SQLHDBC  hDbc  = NULL;
+    SQLHSTMT hStmt = NULL;
+
+    SQLCHAR caSqlStmt[1024] = "";
+
+    int i=0;
+    ST_BASI_STATION_INFO_extbl stBSI;
+
+    if(DBOP_NO == DBApiInitEnv(&hEnv, &hDbc))
+    {
+        Tracer("DBApiInitEnv");
+        return 1;
+    }
+
+    if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"root", (u_char*)"123kbc,./"))
+    {
+        Tracer("DBApiConnectDatabase");
+        return 1;
+    }
+
+    Tracer("fu");
+    DB_QUERY_RESULT_SET stDbQrs;
+
+    DBApiQueryInit(&stDbQrs, hDbc);
+    Tracer("fuck");
+
+    /*
+    if(DBOP_NO == DBApiPreExecSQL(hDbc, &hStmt))
+    {
+        return 1;
+    }
+    */
+
+    Tracer("DBApiExecSQL beg");
+    sprintf((char*)caSqlStmt, "%s", "use fyl");
+
+    //if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
+    if(DBOP_NO == DBApiExecSQL(stDbQrs.hStmt, caSqlStmt))
+    {
+        return 1;
+    }
+    Tracer("DBApiExecSQL end");
+ DBApiQueryFree(&stDbQrs);
+    //DBApiFreeStmt(hStmt);
+    return 0;
+}

@@ -35,8 +35,8 @@ static SQLINTEGER __DBApiFreeHandle(SQLSMALLINT hType, SQLHANDLE hHandle)
 {
     SQLCHAR caMsgText[K8] = "";
 
-    SQLRETURN iRet = SQLFreeHandle(hType, hHandle);
-    if(!SQL_SUCCEEDED(iRet))
+    SQLRETURN nRet = SQLFreeHandle(hType, hHandle);
+    if(!SQL_SUCCEEDED(nRet))
     {
         if(DBOP_OK == DBApiGetErrorInfo(hType, hHandle, caMsgText))
         {
@@ -99,10 +99,10 @@ static SQLINTEGER __DBApiCheckSQLReturn(SQLSMALLINT hType,
 
 SQLINTEGER DBApiInitEnv(SQLHENV *hEnv, SQLHDBC *hDbc)
 {
-    SQLRETURN iRet = SQL_SUCCESS;
+    SQLRETURN nRet = SQL_SUCCESS;
 
-    iRet = SQLAllocHandle(SQL_HANDLE_ENV, NULL, hEnv);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_ENV, *hEnv, iRet))
+    nRet = SQLAllocHandle(SQL_HANDLE_ENV, NULL, hEnv);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_ENV, *hEnv, nRet))
     {
         return DBOP_NO;
     }
@@ -116,8 +116,8 @@ SQLINTEGER DBApiInitEnv(SQLHENV *hEnv, SQLHDBC *hDbc)
     SQLSetEnvAttr(*hEnv, SQL_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF,
             SQL_IS_INTEGER);
 
-    iRet = SQLAllocHandle(SQL_HANDLE_DBC, *hEnv, hDbc);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_DBC, *hDbc, iRet))
+    nRet = SQLAllocHandle(SQL_HANDLE_DBC, *hEnv, hDbc);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_DBC, *hDbc, nRet))
     {
         DBApiFreeEnv(hEnv);
         return DBOP_NO;
@@ -131,11 +131,11 @@ SQLINTEGER DBApiConnectDatabase(SQLHDBC *hDbc,
         SQLCHAR *pcaDBUserName,
         SQLCHAR *pcaDBUserPassword)
 {
-    SQLRETURN iRet = SQL_SUCCESS;
+    SQLRETURN nRet = SQL_SUCCESS;
 
-    iRet = SQLConnect(*hDbc, pcaDBName, SQL_NTS, pcaDBUserName, SQL_NTS,
+    nRet = SQLConnect(*hDbc, pcaDBName, SQL_NTS, pcaDBUserName, SQL_NTS,
             pcaDBUserPassword, SQL_NTS);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_DBC, *hDbc, iRet))
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_DBC, *hDbc, nRet))
     {
         return DBOP_NO;
     }
@@ -145,10 +145,10 @@ SQLINTEGER DBApiConnectDatabase(SQLHDBC *hDbc,
 
 SQLINTEGER DBApiDisConnectDatabase(SQLHDBC hDbc)
 {
-    SQLRETURN iRet = SQL_SUCCESS;
+    SQLRETURN nRet = SQL_SUCCESS;
 
-    iRet = SQLDisconnect(hDbc);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_DBC, hDbc, iRet))
+    nRet = SQLDisconnect(hDbc);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_DBC, hDbc, nRet))
     {
         return DBOP_NO;
     }
@@ -158,10 +158,10 @@ SQLINTEGER DBApiDisConnectDatabase(SQLHDBC hDbc)
 
 SQLINTEGER DBApiPreExecSQL(SQLHDBC hDbc, SQLHSTMT *hStmt)
 {
-    SQLRETURN iRet = SQL_SUCCESS;
+    SQLRETURN nRet = SQL_SUCCESS;
 
-    iRet = SQLAllocHandle(SQL_HANDLE_STMT, hDbc, hStmt);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, *hStmt, iRet))
+    nRet = SQLAllocHandle(SQL_HANDLE_STMT, hDbc, hStmt);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, *hStmt, nRet))
     {
         return DBOP_NO;
     }
@@ -171,10 +171,10 @@ SQLINTEGER DBApiPreExecSQL(SQLHDBC hDbc, SQLHSTMT *hStmt)
 
 SQLINTEGER DBApiExecSQL(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt)
 {
-    SQLRETURN iRet = SQL_SUCCESS;
+    SQLRETURN nRet = SQL_SUCCESS;
 
-    iRet = SQLExecDirect(hStmt, pcaSqlStmt, SQL_NTS);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, iRet))
+    nRet = SQLExecDirect(hStmt, pcaSqlStmt, SQL_NTS);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
     {
         return DBOP_NO;
     }
@@ -182,156 +182,174 @@ SQLINTEGER DBApiExecSQL(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt)
     return DBOP_OK;
 }
 
-SQLINTEGER __DBGetColsInfo(SQLHSTMT hStmt, TableCacheList *pTableInfo)
+FIELD_ATTR *__DBNewFieldAttrNode(SQLINTEGER nSize, SQLINTEGER nType, SQLCHAR *pszName)
 {
-    SQLRETURN   iRet       = SQL_SUCCESS;
-    SQLINTEGER  iTotalSize = 0;
-    SQLSMALLINT iLoop      = 0;
-    SQLSMALLINT iColCnt    = 0;
+    FIELD_ATTR *pField = malloc(sizeof(FIELD_ATTR));
+    struct list_head *list = malloc(sizeof(struct list_head));
 
-    SQLULEN     iColSize       = 0;
-    SQLCHAR     caColName[100] = "";
-    SQLSMALLINT iColAttrLen    = 0;
-    SQLSMALLINT iColType       = 0;
-    SQLSMALLINT iColDecDigit   = 0;
-    SQLSMALLINT iColNullable   = 0;
+    pField->nFieldSize = nSize;
+    pField->nFieldType = nType;
+    sprintf(pField->szFieldName, "%s", pszName);
+    pField->pList = list;
 
-    FieldCacheList *pFieldList = NULL;
+    INIT_LIST_HEAD(pField->pList);
 
-    iRet = SQLNumResultCols(hStmt, &iColCnt);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, iRet))
+    return pField;
+}
+
+SQLINTEGER __DBGetColsInfo(SQLHSTMT hStmt, DB_QUERY_RESULT_SET *pTableInfo)
+{
+    SQLRETURN   nRet       = SQL_SUCCESS;
+    SQLINTEGER  nTotalSize = 0;
+    SQLSMALLINT nLoop      = 0;
+    SQLSMALLINT nColCnt    = 0;
+
+    SQLULEN     nColSize       = 0;
+    SQLCHAR     szColName[100] = "";
+    SQLSMALLINT nColAttrLen    = 0;
+    SQLSMALLINT nColType       = 0;
+    SQLSMALLINT nColDecDigit   = 0;
+    SQLSMALLINT nColNullable   = 0;
+
+    FIELD_ATTR *pFieldAttr = malloc(sizeof(FIELD_ATTR));
+    struct list_head *list = malloc(sizeof(struct list_head));
+
+    INIT_LIST_HEAD(list);
+    pFieldAttr->pList = list;
+
+    nRet = SQLNumResultCols(hStmt, &nColCnt);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
     {
         return DBOP_NO;
     }
 
-    pTableInfo->FieldCounter = iColCnt;
-
-    if(iColCnt==0)
+    if(nColCnt==0)
     {
         return DBOP_NO;
     }
 
-    if(NULL==NEW_FIELD_LIST(pFieldList, iColCnt))
+    for(nLoop=1; nLoop<=nColCnt; nLoop++)
     {
-        return DBOP_NO;
-    }
+        nRet = SQLDescribeCol(hStmt,
+                nLoop,
+                szColName,
+                sizeof(szColName),
+                &nColAttrLen,
+                &nColType,
+                &nColSize,
+                &nColDecDigit,
+                &nColNullable);
 
-    for(iLoop=1; iLoop<=iColCnt; iLoop++)
-    {
-        iRet = SQLDescribeCol(hStmt,
-                iLoop,
-                caColName,
-                sizeof(caColName),
-                &iColAttrLen,
-                &iColType,
-                &iColSize,
-                &iColDecDigit,
-                &iColNullable);
-
-        if(iRet == SQL_ERROR)
+        if(nRet == SQL_ERROR)
         {
             goto err;
         }
 
-        (pFieldList+iLoop-1)->FieldSize = iColSize;
-        (pFieldList+iLoop-1)->FieldType = iColType;
-        sprintf((pFieldList+iLoop-1)->FieldName, "%s", caColName);
+        FIELD_ATTR *field = __DBNewFieldAttrNode(nColSize, nColType, szColName);
+        list_add_tail(field->pList, pFieldAttr->pList);
 
-        iTotalSize += iColSize;
+        nTotalSize += nColSize;
     }
-
-    pTableInfo->FieldList = pFieldList;
-
-    /* Add one char '\0' for every end-of-c-string */
-    pTableInfo->TotalSize = iTotalSize+iColCnt;
+    pTableInfo->TableStruct.nTotalSize = nTotalSize;
+    pTableInfo->TableStruct.nFieldCounter = nColCnt;
+    pTableInfo->TableStruct.pFieldAttrList = pFieldAttr;
 
     return DBOP_OK;
 
 err:
-    if(pFieldList)
-        free(pFieldList);
+    // TODO free
     return DBOP_NO;
 }
 
-SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DBQueryResult **pDBQueryRes)
+SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DB_QUERY_RESULT_SET *pDBQueryRes)
 {
-    SQLRETURN   iRet    = SQL_SUCCESS;
+    SQLRETURN   nRet    = SQL_SUCCESS;
     SQLLEN      iRowCnt = 0; /* Row counter of query result     */
-    SQLSMALLINT iColCnt = 0; /* Columns counter of query result */
+    SQLSMALLINT nColCnt = 0; /* Columns counter of query result */
     SQLINTEGER  iResOfs = 0;
 
-    TableCacheList stTableList = {
+    /*
+    db_query_result_set stTableList = {
         .TotalSize    = 0,
         .FieldCounter = 0,
-        .FieldList    = NULL,
+        .field_attr_list    = NULL,
     };
-
-    DBQueryResult *pstDBQueryRes = NULL;
-
-    iRet = SQLExecDirect(hStmt, pcaSqlStmt, SQL_NTS);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, iRet))
-    {
-        return DBOP_NO;
-    }
-
-    if(DBOP_OK != __DBGetColsInfo(hStmt, &stTableList))
-    {
-        return DBOP_NO;
-    }
-    iColCnt = stTableList.FieldCounter;
-
-    iRet = SQLRowCount(hStmt, &iRowCnt);
-    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, iRet))
-    {
-        goto err;
-    }
-
-    /*
-    if(NULL==(pstDBQueryRes=NEW_DB_QUERY_RESULT(iRowCnt, stTableList.TotalSize)))
-    {
-        goto err;
-    }
     */
+
+    //DBQueryResult *pstDBQueryRes = NULL;
+
+    nRet = SQLExecDirect(hStmt, pcaSqlStmt, SQL_NTS);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
+    {
+        return DBOP_NO;
+    }
+
+    if(DBOP_OK != __DBGetColsInfo(hStmt, pDBQueryRes))
+    {
+        return DBOP_NO;
+    }
+ //   nColCnt = stTableList.FieldCounter;
+
+    nRet = SQLRowCount(hStmt, &iRowCnt);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
+    {
+        goto err;
+    }
+
+    FIELD_ATTR *tmp;
+    struct list_head *pos;
+
+    list_for_each(pos, pDBQueryRes->TableStruct.pFieldAttrList->pList)
+    {
+        tmp = list_entry(pos, FIELD_ATTR, pList);
+        printf("nFieldSize=%d nFieldType=%d szFieldName=%s\n",
+                tmp->nFieldSize, tmp->nFieldType, tmp->szFieldName);
+    }
+
+    return 0;
 
     SQLLEN iRealSize = 0;
     SQLCHAR caColVal[100] = "";
     for(;;)
     {
-        iRet =  SQLFetch(hStmt);
+        nRet =  SQLFetch(hStmt);
 
-        if(iRet == SQL_ERROR || iRet == SQL_SUCCESS_WITH_INFO)
+        if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
         {
-            if(iRet == SQL_ERROR)
+            if(nRet == SQL_ERROR)
                 break;
         }
-        else if(iRet == SQL_NO_DATA)
+        else if(nRet == SQL_NO_DATA)
         {
             break;
         }
 
         SQLSMALLINT iColLoop;
         SQLSMALLINT iFieldMaxSize = 0;
-        for(iColLoop=1; iColLoop <= iColCnt; iColLoop++)
+        for(iColLoop=1; iColLoop <= nColCnt; iColLoop++)
         {
-            iFieldMaxSize = (stTableList.FieldList+iColLoop-1)->FieldSize;
-            iRet = SQLGetData(hStmt, iColLoop, SQL_C_CHAR, caColVal, 100, &iRealSize);
+     //       iFieldMaxSize = (stTableList.field_attr_list+iColLoop-1)->FieldSize;
+            nRet = SQLGetData(hStmt, iColLoop, SQL_C_CHAR, caColVal, 100, &iRealSize);
+            TracerNumber(nRet);
 
-            if(iRet == SQL_ERROR || iRet == SQL_SUCCESS_WITH_INFO)
+            if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
             {
-                if(iRet == SQL_ERROR)
+                if(nRet == SQL_ERROR)
                     break;
             }
-            else if(iRet == SQL_NO_DATA)
+            else if(nRet == SQL_NO_DATA)
             {
                 break;
             }
+            printf("%s ", caColVal);
             /*
             memcpy(pstDBQueryRes->ResultSet+iResOfs, (void*)caColVal, iRealSize);
             iResOfs += (iFieldMaxSize+1);
             */
         }
     }
-    TracerNumber(stTableList.TotalSize);
+    Tracer("\n");
+    //TracerNumber(stTableList.TotalSize);
 
     /*
     *pDBQueryRes = pstDBQueryRes;
@@ -339,12 +357,12 @@ SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DBQueryResult **pDBQu
     (*pDBQueryRes)->TableSize       = stTableList.TotalSize;
     */
 
-    FREE(stTableList.FieldList);
+    //FREE(stTableList.field_attr_list);
 
     return DBOP_OK;
 
 err:
-    FREE(stTableList.FieldList);
+    //FREE(stTableList.field_attr_list);
     return DBOP_NO;
 }
 
@@ -360,14 +378,14 @@ SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
     SQLSMALLINT iRecNumber;
     SQLSMALLINT iTextLength;
 
-    SQLRETURN iRet = SQL_SUCCESS;
+    SQLRETURN nRet = SQL_SUCCESS;
 
     iRecNumber = 1;
     iTextRealLength = 0;
 
     while(1)
     {
-        iRet=SQLGetDiagRec(hType,
+        nRet=SQLGetDiagRec(hType,
                 hHandle,
                 iRecNumber,
                 caSqlState,
@@ -375,7 +393,7 @@ SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
                 caMsgText,
                 SQL_MAX_MESSAGE_LENGTH-1,
                 &iTextLength);
-        if(SQL_SUCCEEDED(iRet))
+        if(SQL_SUCCEEDED(nRet))
         {
             iTextRealLength += sprintf((char*)pcaMsgText+iTextRealLength, "%s", caMsgText);
 
@@ -390,57 +408,52 @@ SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
         }
     }
 
-    if(iRet != SQL_NO_DATA || !iTextRealLength)
+    if(nRet != SQL_NO_DATA || !iTextRealLength)
         return DBOP_NO;
 
     return DBOP_OK;
 }
 
+SQLINTEGER DBApiQueryInit(DB_QUERY_RESULT_SET *pDbQrs, SQLHDBC hDbc)
+{
+    struct list_head *root = malloc(sizeof(struct list_head));
+    INIT_LIST_HEAD(root);
+
+    if(DBOP_OK != DBApiPreExecSQL(hDbc, &pDbQrs->hStmt))
+    {
+        return DBOP_NO;
+    }
+
+    pDbQrs->nTableSize = 0;
+    pDbQrs->nRowCounter = 0;
+    pDbQrs->TableStruct.nTotalSize = 0;
+    pDbQrs->TableStruct.nFieldCounter = 0;
+    pDbQrs->TableStruct.szTableName[0] = 0;
+    pDbQrs->TableStruct.pFieldAttrList = NULL;
+
+    pDbQrs->ListRoot = root;
+
+    pDbQrs->hDbc = hDbc;
+
+    return DBOP_OK;
+}
+
 /*
-void *NEW_DB_QUERY_RESULT(int nmemb, int size)
+ * TODO: lish_head free
+ */
+SQLINTEGER DBApiQueryFree(DB_QUERY_RESULT_SET *pDbQrs)
 {
-    DBQueryResult *p = NULL;
-    p = malloc(SIZE_OF_DB_QUERY_RESULT());
-    p->ResultSet = malloc(nmemb*size);
-    memset(p->ResultSet, 0x0, nmemb*size);
-    return p;
+    pDbQrs->nTableSize = 0;
+    pDbQrs->nRowCounter = 0;
+    pDbQrs->TableStruct.nTotalSize = 0;
+    pDbQrs->TableStruct.nFieldCounter = 0;
+    pDbQrs->TableStruct.szTableName[0] = 0;
+
+    DBApiFreeStmt(pDbQrs->hStmt);
+    pDbQrs->hDbc = NULL;
+
+    //TODO
+    //pDbQrs->TableStruct.pFieldAttrList = NULL;
+    //pDbQrs->ListRoot;
+    return DBOP_OK;
 }
-*/
-
-//#define ITER_AUTO(type) struct list_head *type
-
-/*
-static inline struct list_head *begin(DBQueryResult *dbqr)
-{
-    dbqr->iter = dbqr->root->next;
-    return dbqr->iter;
-}
-
-static inline struct list_head *next(DBQueryResult *dbqr)
-{
-    dbqr->iter = dbqr->iter->next;
-    return dbqr->iter;
-}
-
-static inline struct list_head *end(DBQueryResult *dbqr)
-{
-    return dbqr->root;
-}
-
-static inline void *fetch(struct list_head *iter)
-{
-    return list_entry(iter, DBRow, list);
-}
-
-void InitDbQueryResult(DBQueryResult *dbqr)
-{
-    dbqr->TableSize     = 0;
-    dbqr->ResultCounter = 0;
-    dbqr->begin         = begin;
-    dbqr->next          = next;
-    dbqr->end           = end;
-    dbqr->fetch         = fetch;
-    return;
-}
-
-*/

@@ -13,48 +13,45 @@ DBApiFreeStmt	DB_Api.c	/^SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt)$/;"	f
 DBApiGetErrorInfo	DB_Api.c	/^SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,$/;"	f
 DBApiInitEnv	DB_Api.c	/^SQLINTEGER DBApiInitEnv(SQLHENV *hEnv, SQLHDBC *hDbc)$/;"	f
 DBApiPreExecSQL	DB_Api.c	/^SQLINTEGER DBApiPreExecSQL(SQLHDBC hDbc, SQLHSTMT *hStmt)$/;"	f
-DBApiQuery	DB_Api.c	/^SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DBQueryResult **pDBQueryRes)$/;"	f
-DBDeleteList	List.c	/^void DBDeleteList(struct list_head *p)$/;"	f
+DBApiQuery	DB_Api.c	/^SQLINTEGER DBApiQuery(SQLHSTMT hStmt, SQLCHAR *pcaSqlStmt, DB_QUERY_RESULT_SET *pDBQueryRes)$/;"	f
+DBApiQueryFree	DB_Api.c	/^SQLINTEGER DBApiQueryFree(DB_QUERY_RESULT_SET *pDbQrs)$/;"	f
+DBApiQueryInit	DB_Api.c	/^SQLINTEGER DBApiQueryInit(DB_QUERY_RESULT_SET *pDbQrs, SQLHDBC hDbc)$/;"	f
 DBOP_NO	DB_Api.h	20;"	d
 DBOP_NO	DB_Api.h	30;"	d
 DBOP_NO	DB_Api.h	31;"	d
 DBOP_OK	DB_Api.h	19;"	d
 DBOP_OK	DB_Api.h	25;"	d
 DBOP_OK	DB_Api.h	26;"	d
-DBQueryResult	DB_Api.h	/^} DBQueryResult;$/;"	t	typeref:struct:db_query_result_
-DBRowValue	DB_Api.h	/^} DBRowValue;$/;"	t	typeref:struct:db_row_data_
-DB_FOREACH_ENTRY	DB_Api.h	85;"	d
-DB_INIT_POS	DB_Api.h	84;"	d
+DB_FOREACH_ENTRY	DB_Api.h	104;"	d
+DB_INIT_POS	DB_Api.h	102;"	d
 DB_NO_DATA	DB_Api.h	22;"	d
 DB_NO_DATA	DB_Api.h	35;"	d
 DB_NO_DATA	DB_Api.h	36;"	d
-DELETE_ONE_RECORD_FROM_LIST	DB_Api.h	82;"	d
+DB_QUERY_RESULT_SET	DB_Api.h	/^typedef struct DB_QUERY_RESULT_SET$/;"	s
+DB_QUERY_RESULT_SET	DB_Api.h	/^} DB_QUERY_RESULT_SET;$/;"	t	typeref:struct:DB_QUERY_RESULT_SET
+DELETE_ONE_RECORD_FROM_LIST	DB_Api.h	99;"	d
+FIELD_ATTR	DB_Api.h	/^} FIELD_ATTR;$/;"	t	typeref:struct:FILDE_ATTR
+FILDE_ATTR	DB_Api.h	/^typedef struct FILDE_ATTR$/;"	s
 FREE	DB_Api.c	20;"	d	file:
-FieldCacheList	DB_Api.h	/^} FieldCacheList;$/;"	t	typeref:struct:filde_cache_list_
-FieldCounter	DB_Api.h	/^	int             FieldCounter;$/;"	m	struct:table_cache_list_
-FieldList	DB_Api.h	/^	FieldCacheList *FieldList;$/;"	m	struct:table_cache_list_
-FieldName	DB_Api.h	/^	char FieldName[128];$/;"	m	struct:filde_cache_list_
-FieldSize	DB_Api.h	/^	int  FieldSize;$/;"	m	struct:filde_cache_list_
-FieldType	DB_Api.h	/^	int  FieldType;$/;"	m	struct:filde_cache_list_
 INIT_LIST_HEAD	List.h	/^static inline void INIT_LIST_HEAD(struct list_head *list)$/;"	f
-INIT_ONE_LIST_ROOT	DB_Api.h	76;"	d
-INSERT_ONE_RECORD_INTO_LIST	DB_Api.h	78;"	d
-INSERT_ONE_RECORD_INTO_LIST_TAIL	DB_Api.h	80;"	d
+INIT_ONE_LIST_ROOT	DB_Api.h	91;"	d
+INSERT_ONE_RECORD_INTO_LIST	DB_Api.h	93;"	d
+INSERT_ONE_RECORD_INTO_LIST_TAIL	DB_Api.h	96;"	d
 K8	DB_Api.c	9;"	d	file:
-LIST_HEAD	List.h	27;"	d
-LIST_HEAD_INIT	List.h	25;"	d
+LIST_HEAD	List.h	46;"	d
+LIST_HEAD_INIT	List.h	44;"	d
+List	DB_Api.h	/^	struct list_head  List;$/;"	m	struct:ROW_DATA	typeref:struct:ROW_DATA::list_head
+ListRoot	DB_Api.h	/^	struct list_head *ListRoot;$/;"	m	struct:DB_QUERY_RESULT_SET	typeref:struct:DB_QUERY_RESULT_SET::list_head
 LogDumpHex	Log.c	/^void LogDumpHex(const char *pTitle, const char *pMem, unsigned int size)$/;"	f
-NEW_FIELD_LIST	DB_Api.h	70;"	d
-ResultCounter	DB_Api.h	/^	int        ResultCounter;$/;"	m	struct:db_query_result_
-Root	DB_Api.h	/^	DBRowValue Root;$/;"	m	struct:db_query_result_
-RowValue	DB_Api.h	/^	void             *RowValue;$/;"	m	struct:db_row_data_
-SIZE_OF_DB_QUERY_RESULT	DB_Api.h	73;"	d
-SIZE_OF_FIELD_CACHE	DB_Api.h	67;"	d
+NEW_FIELD_LIST	DB_Api.h	85;"	d
+ROW_DATA	DB_Api.h	/^typedef struct ROW_DATA$/;"	s
+ROW_SET	DB_Api.h	/^} ROW_SET;$/;"	t	typeref:struct:ROW_DATA
+SIZE_OF_DB_QUERY_RESULT	DB_Api.h	88;"	d
+SIZE_OF_FIELD_CACHE	DB_Api.h	82;"	d
 ST_BASI_STATION_INFO_extbl	main.c	/^} ST_BASI_STATION_INFO_extbl;$/;"	t	typeref:struct:__anon1	file:
-TableCacheList	DB_Api.h	/^} TableCacheList;$/;"	t	typeref:struct:table_cache_list_
-TableName	DB_Api.h	/^	char            TableName[128];$/;"	m	struct:table_cache_list_
-TableSize	DB_Api.h	/^	int        TableSize;$/;"	m	struct:db_query_result_
-TotalSize	DB_Api.h	/^	int             TotalSize;$/;"	m	struct:table_cache_list_
+TABLE_INFO	DB_Api.h	/^typedef struct TABLE_INFO$/;"	s
+TABLE_STRUCTURE	DB_Api.h	/^} TABLE_STRUCTURE;$/;"	t	typeref:struct:TABLE_INFO
+TableStruct	DB_Api.h	/^	TABLE_STRUCTURE   TableStruct;$/;"	m	struct:DB_QUERY_RESULT_SET
 Tracer	DB_Api.c	22;"	d	file:
 Tracer	main.c	4;"	d	file:
 TracerNumber	DB_Api.c	23;"	d	file:
@@ -62,13 +59,13 @@ TracerNumber	main.c	5;"	d	file:
 _DB_API_H_	DB_Api.h	3;"	d
 __DBApiCheckSQLReturn	DB_Api.c	/^static SQLINTEGER __DBApiCheckSQLReturn(SQLSMALLINT hType,$/;"	f	file:
 __DBApiFreeHandle	DB_Api.c	/^static SQLINTEGER __DBApiFreeHandle(SQLSMALLINT hType, SQLHANDLE hHandle)$/;"	f	file:
-__DBGetColsInfo	DB_Api.c	/^SQLINTEGER __DBGetColsInfo(SQLHSTMT hStmt, TableCacheList *pTableInfo)$/;"	f
+__DBGetColsInfo	DB_Api.c	/^SQLINTEGER __DBGetColsInfo(SQLHSTMT hStmt, DB_QUERY_RESULT_SET *pTableInfo)$/;"	f
 __LIST_H__	List.h	3;"	d
 __LOG_H__	Log.h	3;"	d
 __MAIN_H__	main.h	3;"	d
 __list_add	List.h	/^static inline void __list_add(struct list_head *new,$/;"	f
 __list_del	List.h	/^static inline void __list_del(struct list_head *prev, struct list_head *next)$/;"	f
-__list_for_each	List.h	145;"	d
+__list_for_each	List.h	164;"	d
 __tracer	DB_Api.c	/^void __tracer(const char *file, int line, const char *func, const char *str)$/;"	f
 __tracerNumber	DB_Api.c	/^void __tracerNumber(const char *file, int line, const char *func, const int v)$/;"	f
 caCNName	main.c	/^    char caCNName[65];$/;"	m	struct:__anon1	file:
@@ -77,32 +74,27 @@ caLineId	main.c	/^    char caLineId[3];$/;"	m	struct:__anon1	file:
 caLocationType	main.c	/^    char caLocationType[3];$/;"	m	struct:__anon1	file:
 caLocationValue	main.c	/^    char caLocationValue[5];$/;"	m	struct:__anon1	file:
 caStationId	main.c	/^    char caStationId[5];$/;"	m	struct:__anon1	file:
-container_of	List.h	16;"	d
-db_query_result_	DB_Api.h	/^typedef struct db_query_result_ {$/;"	s
-db_row_data_	DB_Api.h	/^typedef struct db_row_data_ {$/;"	s
+container_of	List.h	35;"	d
 false	DB_Api.h	15;"	d
 false	DB_Api.h	16;"	d
-filde_cache_list_	DB_Api.h	/^typedef struct filde_cache_list_ {$/;"	s
-fox	List.c	/^struct fox{$/;"	s	file:
 ghDbc	DB_Api.c	/^SQLHANDLE ghDbc = NULL;$/;"	v
 ghEnv	DB_Api.c	/^SQLHANDLE ghEnv = NULL;$/;"	v
 ghStmt	DB_Api.c	/^SQLHANDLE ghStmt = NULL;$/;"	v
-is_cute	List.c	/^    int is_cute;$/;"	m	struct:fox	file:
-list	DB_Api.h	/^	struct list_head  list;$/;"	m	struct:db_row_data_	typeref:struct:db_row_data_::list_head
-list	List.c	/^    struct list_head list;$/;"	m	struct:fox	typeref:struct:fox::list_head	file:
+hDbc	DB_Api.h	/^	SQLHDBC           hDbc;$/;"	m	struct:DB_QUERY_RESULT_SET
+hStmt	DB_Api.h	/^	SQLHSTMT          hStmt;$/;"	m	struct:DB_QUERY_RESULT_SET
 list_add	List.h	/^static inline void list_add(struct list_head *new, struct list_head *head)$/;"	f
 list_add_tail	List.h	/^static inline void list_add_tail(struct list_head *new, struct list_head *head)$/;"	f
 list_del	List.h	/^static inline void list_del(struct list_head *entry)$/;"	f
 list_del_init	List.h	/^static inline void list_del_init(struct list_head *entry)$/;"	f
 list_empty	List.h	/^static inline int list_empty(const struct list_head *head)$/;"	f
 list_empty_careful	List.h	/^static inline int list_empty_careful(const struct list_head *head)$/;"	f
-list_entry	List.h	136;"	d
-list_first_entry	List.h	139;"	d
-list_for_each	List.h	142;"	d
-list_for_each_entry	List.h	160;"	d
-list_for_each_prev	List.h	148;"	d
-list_for_each_prev_safe	List.h	155;"	d
-list_for_each_safe	List.h	151;"	d
+list_entry	List.h	155;"	d
+list_first_entry	List.h	158;"	d
+list_for_each	List.h	161;"	d
+list_for_each_entry	List.h	179;"	d
+list_for_each_prev	List.h	167;"	d
+list_for_each_prev_safe	List.h	174;"	d
+list_for_each_safe	List.h	170;"	d
 list_head	List.h	/^struct list_head {$/;"	s
 list_is_last	List.h	/^static inline int list_is_last(const struct list_head *list,$/;"	f
 list_is_singular	List.h	/^static inline int list_is_singular(const struct list_head *head)$/;"	f
@@ -112,12 +104,20 @@ list_replace	List.h	/^static inline void list_replace(struct list_head *old, str
 list_replace_init	List.h	/^static inline void list_replace_init(struct list_head *old,$/;"	f
 list_rotate_left	List.h	/^static inline void list_rotate_left(struct list_head *head)$/;"	f
 main	main.c	/^int main()$/;"	f
+nFieldCounter	DB_Api.h	/^	int         nFieldCounter;$/;"	m	struct:TABLE_INFO
+nFieldSize	DB_Api.h	/^	int  nFieldSize;$/;"	m	struct:FILDE_ATTR
+nFieldType	DB_Api.h	/^	int  nFieldType;$/;"	m	struct:FILDE_ATTR
+nRowCounter	DB_Api.h	/^	int               nRowCounter;$/;"	m	struct:DB_QUERY_RESULT_SET
+nTableSize	DB_Api.h	/^	int               nTableSize;$/;"	m	struct:DB_QUERY_RESULT_SET
+nTotalSize	DB_Api.h	/^	int         nTotalSize;$/;"	m	struct:TABLE_INFO
 next	List.h	/^	struct list_head *prev, *next;$/;"	m	struct:list_head	typeref:struct:list_head::
-offsetof	List.h	12;"	d
+offsetof	List.h	24;"	d
+pFieldAttrList	DB_Api.h	/^	FIELD_ATTR *pFieldAttrList;$/;"	m	struct:TABLE_INFO
+pValue	DB_Api.h	/^	void             *pValue;$/;"	m	struct:ROW_DATA
 prev	List.h	/^	struct list_head *prev, *next;$/;"	m	struct:list_head	typeref:struct:list_head::list_head
-table_cache_list_	DB_Api.h	/^typedef struct table_cache_list_ {$/;"	s
-testsuit	List.c	/^int testsuit()$/;"	f
+szFieldName	DB_Api.h	/^	char szFieldName[128];$/;"	m	struct:FILDE_ATTR
+szTableName	DB_Api.h	/^	char        szTableName[128];$/;"	m	struct:TABLE_INFO
 true	DB_Api.h	10;"	d
 true	DB_Api.h	11;"	d
-weight	List.c	/^    unsigned int weight;$/;"	m	struct:fox	file:
 writelog	DB_Api.c	/^void writelog(const char *fmt, ...)$/;"	f
+xmain	List.c	/^int xmain()$/;"	f
