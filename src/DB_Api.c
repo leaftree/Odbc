@@ -459,3 +459,97 @@ SQLINTEGER DBApiQueryFree(DB_QUERY_RESULT_SET *pDbQrs)
     return DBOP_OK;
 }
 #endif
+
+void *NewFieldAttrNode()
+{
+    FIELD_ATTR *new = malloc(sizeof(FIELD_ATTR));
+    if(!new)
+        return NULL;
+
+    new->nFieldSize = 0;
+    new->nFieldType = 0;
+    *new->szFieldName= 0;
+    INIT_LIST_HEAD(&new->List);
+
+    return new;
+}
+
+void FreeFieldAttrList(TABLE_STRUCTURE *pTabStruct)
+{
+    list_head *n, *pos, *root;
+
+    if(!pTabStruct)
+        return;
+
+    FIELD_ATTR *entry;
+
+    root = pTabStruct->pListRoot;
+
+    list_for_each_safe(pos, n, root)
+    {
+        list_del(pos);
+        entry = list_entry(pos, FIELD_ATTR, List);
+        free(entry);
+    }
+
+    free(pTabStruct->pListRoot);
+    pTabStruct->pListRoot = NULL;
+    pTabStruct->pCursor = NULL;
+}
+
+int AddFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *new)
+{
+    if(!pTabStruct || !new || !pTabStruct->pListRoot)
+        return -1;
+
+    list_add(&new->List, pTabStruct->pListRoot);
+
+    return 0;
+}
+
+int AddFieldAttrNodeTail(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *pNew)
+{
+    if(!pTabStruct || !pTabStruct->pListRoot || !pNew)
+        return -1;
+
+    list_add_tail(&pNew->List, pTabStruct->pListRoot);
+
+    return 0;
+}
+
+int FetchNextFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR **ppField)
+{
+    FIELD_ATTR *field;
+
+    if(!pTabStruct || !pTabStruct->pCursor || !ppField)
+        return -1;
+
+    if(list_empty(pTabStruct->pListRoot) || pTabStruct->pCursor->next==pTabStruct->pListRoot)
+    {
+        pTabStruct->pCursor = pTabStruct->pListRoot;
+        return 1;
+    }
+
+    field = list_entry(pTabStruct->pCursor->next, FIELD_ATTR, List);
+    pTabStruct->pCursor = pTabStruct->pCursor->next;
+
+    *ppField=field;
+
+    return 0;
+}
+
+TABLE_STRUCTURE *NewTableStruct()
+{
+    TABLE_STRUCTURE *pTabStruct = malloc(sizeof(TABLE_STRUCTURE));
+
+    list_head *root = malloc(sizeof(list_head));
+    INIT_LIST_HEAD(root);
+
+    pTabStruct->pCursor = root;
+    pTabStruct->pListRoot = root;
+    pTabStruct->FreeFieldAttrList = FreeFieldAttrList;
+    pTabStruct->AddFieldAttrNodeTail = AddFieldAttrNodeTail;
+    pTabStruct->FetchNextFieldAttrNode = FetchNextFieldAttrNode;
+
+    return pTabStruct;
+}

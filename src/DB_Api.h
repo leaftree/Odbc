@@ -36,6 +36,68 @@
 # define DB_NO_DATA (NOT_FOUND)
 #endif
 
+typedef struct list_head list_head;
+
+typedef struct FIELD_ATTR FIELD_ATTR;
+typedef struct TABLE_STRUCTURE TABLE_STRUCTURE;
+
+/**
+ * 字段域信息
+ */
+struct FIELD_ATTR
+{
+	int              nFieldSize;
+	int              nFieldType;
+	char             szFieldName[128];
+	struct list_head List;
+};
+
+/**
+ * 表结构信息
+ */
+struct TABLE_STRUCTURE
+{
+	int         nTotalSize;
+	int         nFieldCounter;
+	char        szTableName[128];
+	list_head  *pCursor;
+	list_head  *pListRoot;
+
+	void (*FreeFieldAttrList)     (TABLE_STRUCTURE *);
+	int  (*AddFieldAttrNodeTail)  (TABLE_STRUCTURE *, FIELD_ATTR *);
+	int  (*FetchNextFieldAttrNode)(TABLE_STRUCTURE *, FIELD_ATTR **);
+};
+
+void *NewFieldAttrNode();
+TABLE_STRUCTURE *NewTableStruct();
+void FreeFieldAttrList(TABLE_STRUCTURE *pTabStruct);
+int AddFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *new);
+int AddFieldAttrNodeTail(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *pNew);
+int FetchNextFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR **ppField);
+
+/**
+ * 库表行记录
+ */
+typedef struct ROW_DATA
+{
+	int               nLength;
+	void             *pValue;
+	struct list_head  List;
+} ROW_DATA;
+
+/**
+ * 库表查询结果集合
+ */
+typedef struct DB_QUERY_RESULT_SET
+{
+	int               nTableSize;
+	int               nRowCounter;
+	//struct list_head *pList;
+	TABLE_STRUCTURE  *pTableStruct;
+	SQLHDBC           hDbc;
+	SQLHSTMT          hStmt;
+} DB_QUERY_RESULT_SET;
+
 #if 0
 /**
  * 字段域信息
@@ -108,20 +170,20 @@ typedef struct DB_QUERY_RESULT_SET
 	list_for_each_entry(pos, &(root), list)
 
 SQLINTEGER DBApiInitEnv(SQLHENV *hEnv,
-	                    	SQLHDBC *hDbc);
+		SQLHDBC *hDbc);
 
 SQLINTEGER DBApiConnectDatabase(SQLHDBC *hDbc,
-                                SQLCHAR *pcaDBName,
-                                SQLCHAR *pcaDBUserName,
-                                SQLCHAR *pcaDBUserPassword);
+		SQLCHAR *pcaDBName,
+		SQLCHAR *pcaDBUserName,
+		SQLCHAR *pcaDBUserPassword);
 
 SQLINTEGER DBApiDisConnectDatabase(SQLHDBC hDbc);
 
 SQLINTEGER DBApiPreExecSQL(SQLHDBC   hDbc,
-                           SQLHSTMT *hStmt);
+		SQLHSTMT *hStmt);
 
 SQLINTEGER DBApiExecSQL(SQLHSTMT hStmt,
-                        SQLCHAR *pcaSqlStmt);
+		SQLCHAR *pcaSqlStmt);
 
 SQLINTEGER DBApiFreeEnv(SQLHENV hEnv);
 
@@ -130,13 +192,13 @@ SQLINTEGER DBApiFreeDbc(SQLHDBC hDbc);
 SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt);
 
 /*
-SQLINTEGER DBApiQuery(SQLHSTMT             hStmt,
-		                  SQLCHAR             *pcaSqlStmt,
-		                  DB_QUERY_RESULT_SET *pDBQueryRes);
-											*/
+	 SQLINTEGER DBApiQuery(SQLHSTMT             hStmt,
+	 SQLCHAR             *pcaSqlStmt,
+	 DB_QUERY_RESULT_SET *pDBQueryRes);
+	 */
 
 SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
-                             SQLHANDLE   hHandle,
-                             SQLCHAR    *pcaMsgText);
+		SQLHANDLE   hHandle,
+		SQLCHAR    *pcaMsgText);
 
 #endif /* _DB_API_H_ */

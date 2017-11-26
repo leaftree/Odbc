@@ -5,9 +5,11 @@
 #include <time.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <malloc.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <sys/param.h>
 
