@@ -37,9 +37,9 @@
 #endif
 
 typedef struct list_head list_head;
-
 typedef struct FIELD_ATTR FIELD_ATTR;
 typedef struct TABLE_STRUCTURE TABLE_STRUCTURE;
+typedef struct DB_QUERY_RESULT_SET DB_QUERY_RESULT_SET;
 
 /**
  * 字段域信息
@@ -63,106 +63,50 @@ struct TABLE_STRUCTURE
 	list_head  *pCursor;
 	list_head  *pListRoot;
 
-	void (*FreeFieldAttrList)     (TABLE_STRUCTURE *);
-	int  (*AddFieldAttrNodeTail)  (TABLE_STRUCTURE *, FIELD_ATTR *);
-	int  (*FetchNextFieldAttrNode)(TABLE_STRUCTURE *, FIELD_ATTR **);
+	void *(*NewField) ();
+	void  (*Free)     (TABLE_STRUCTURE *);
+	int   (*AddTail)  (TABLE_STRUCTURE *, FIELD_ATTR *);
+	int   (*AddHead)  (TABLE_STRUCTURE *, FIELD_ATTR *);
+	int   (*Next)     (TABLE_STRUCTURE *, FIELD_ATTR **);
 };
-
-void *NewFieldAttrNode();
-TABLE_STRUCTURE *NewTableStruct();
-void FreeFieldAttrList(TABLE_STRUCTURE *pTabStruct);
-int AddFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *new);
-int AddFieldAttrNodeTail(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *pNew);
-int FetchNextFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR **ppField);
 
 /**
  * 库表行记录
  */
 typedef struct ROW_DATA
 {
+	struct list_head  List;
 	int               nLength;
 	void             *pValue;
-	struct list_head  List;
 } ROW_DATA;
 
 /**
  * 库表查询结果集合
  */
-typedef struct DB_QUERY_RESULT_SET
+struct DB_QUERY_RESULT_SET
 {
 	int               nTableSize;
 	int               nRowCounter;
-	//struct list_head *pList;
 	TABLE_STRUCTURE  *pTableStruct;
+	ROW_DATA         *pRow;
+	list_head        *pRowCursor;
 	SQLHDBC           hDbc;
 	SQLHSTMT          hStmt;
-} DB_QUERY_RESULT_SET;
 
-#if 0
-/**
- * 字段域信息
- */
-typedef struct FILDE_ATTR
-{
-	int              nFieldSize;
-	int              nFieldType;
-	char             szFieldName[128];
-	struct list_head List;
-} FIELD_ATTR;
+	void             *(*New)     (int nSize);
+	void              (*Free)    (ROW_DATA **);
+	void              (*Destroy) (DB_QUERY_RESULT_SET **);
+	int               (*Next)    (DB_QUERY_RESULT_SET *, ROW_DATA *);
+	int               (*AddHead) (DB_QUERY_RESULT_SET *, ROW_DATA *);
+	int               (*AddTail) (DB_QUERY_RESULT_SET *, ROW_DATA *);
+};
 
-/**
- * 表结构信息
- */
-typedef struct TABLE_INFO
-{
-	int         nTotalSize;
-	int         nFieldCounter;
-	char        szTableName[128];
-	FIELD_ATTR *pFieldAttrList;
-} TABLE_STRUCTURE;
-
-/**
- * 库表行记录
- */
-typedef struct ROW_DATA
-{
-	struct list_head  List;
-	void             *pValue;
-} ROW_SET;
-
-/**
- * 库表查询结果集合
- */
-typedef struct DB_QUERY_RESULT_SET
-{
-	struct list_head *ListRoot;
-	int               nTableSize;
-	int               nRowCounter;
-	TABLE_STRUCTURE   TableStruct;
-	SQLHDBC           hDbc;
-	SQLHSTMT          hStmt;
-} DB_QUERY_RESULT_SET;
-#endif
-
-#define SIZE_OF_FIELD_CACHE(field) \
-	(sizeof(TableCacheList))
-
-#define NEW_FIELD_LIST(field, cnt) \
-	(field=(void*)malloc(sizeof(FieldCacheList)*cnt))
-
-#define SIZE_OF_DB_QUERY_RESULT() \
-	(sizeof(DBQueryResult))
-
-#define INIT_ONE_LIST_ROOT(root) LIST_HEAD(root)
-
-#define INSERT_ONE_RECORD_INTO_LIST(ptr, root) \
-	list_add((ptr)->Root.list, &(root))
-
-#define INSERT_ONE_RECORD_INTO_LIST_TAIL(new, root) \
-	list_add_tail(&((new)->list), &(root))
-
-#define DELETE_ONE_RECORD_FROM_LIST(ptr) \
-	list_del(&((ptr)->Root).list)
+int FetchNextRow(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow);
+void *InitDbQuerySet(SQLHDBC hDbc, SQLHSTMT hStmt);
+void FreeDbQuerySet(DB_QUERY_RESULT_SET **pDbQrs);
+void FreeDBRow(ROW_DATA **pRow);
+int DBRowAddHead(DB_QUERY_RESULT_SET *pDBQrs, ROW_DATA *pRow);
+int DBRowAddTail(DB_QUERY_RESULT_SET *pDBQrs, ROW_DATA *pRow);
 
 #define DB_INIT_POS(pos) DBRow *pos
 

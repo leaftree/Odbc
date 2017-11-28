@@ -36,9 +36,12 @@ $(bin):$(obj) $(inc)
 run:$(obj) $(bin)
 	$(QUIET_EXEC) $(PWD)/$(bin)
 
+mt:mtrace.log
+	-@mtrace mtrace.log
+
 tags:$(src) $(inc)
 	-@ctags $(src) $(inc)
 
 .PHONY:clean
 clean:
-	$(QUIET_REMOVE) -f $(obj) $(bin) *.gch core.*
+	$(QUIET_REMOVE) -f $(obj) $(bin) *.gch core.* *.log

@@ -29,7 +29,8 @@ int InitLogger(Logger *log, LOGTYPE type, const char pszLogPath[], const char ps
 
 	if(*szLogFileName)
 	{
-		log->iLogFd = open(szLogFileName, O_RDWR|O_CREAT|O_APPEND, 0644);
+		//log->iLogFd = open(szLogFileName, O_RDWR|O_CREAT|O_APPEND, 0644);
+		log->iLogFd = open(szLogFileName, O_RDWR|O_CREAT|O_TRUNC, 0644);
 		if(log->iLogFd<1)
 			return -1;
 	}

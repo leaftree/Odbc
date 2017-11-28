@@ -517,6 +517,16 @@ int AddFieldAttrNodeTail(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *pNew)
     return 0;
 }
 
+int AddFieldAttrNodeHead(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *pNew)
+{
+    if(!pTabStruct || !pTabStruct->pListRoot || !pNew)
+        return -1;
+
+    list_add(&pNew->List, pTabStruct->pListRoot);
+
+    return 0;
+}
+
 int FetchNextFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR **ppField)
 {
     FIELD_ATTR *field;
@@ -538,18 +548,174 @@ int FetchNextFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR **ppField)
     return 0;
 }
 
-TABLE_STRUCTURE *NewTableStruct()
+void *NewTableStruct()
 {
     TABLE_STRUCTURE *pTabStruct = malloc(sizeof(TABLE_STRUCTURE));
 
     list_head *root = malloc(sizeof(list_head));
     INIT_LIST_HEAD(root);
 
-    pTabStruct->pCursor = root;
+    pTabStruct->pCursor   = root;
     pTabStruct->pListRoot = root;
-    pTabStruct->FreeFieldAttrList = FreeFieldAttrList;
-    pTabStruct->AddFieldAttrNodeTail = AddFieldAttrNodeTail;
-    pTabStruct->FetchNextFieldAttrNode = FetchNextFieldAttrNode;
+    pTabStruct->Free      = FreeFieldAttrList;
+    pTabStruct->Next      = FetchNextFieldAttrNode;
+    pTabStruct->AddTail   = AddFieldAttrNodeTail;
+    pTabStruct->AddHead   = AddFieldAttrNodeHead;
+    pTabStruct->NewField  = NewFieldAttrNode;
 
     return pTabStruct;
+}
+
+void *NewRowNode(int nSize)
+{
+    ROW_DATA *new = malloc(sizeof(ROW_DATA)+nSize);
+    if(!new)
+        return NULL;
+
+    new->nLength = nSize;
+    new->pValue = new+sizeof(ROW_DATA);
+    INIT_LIST_HEAD(&new->List);
+
+    return new;
+}
+
+void *InitDbQuerySet(SQLHDBC hDbc, SQLHSTMT hStmt)
+{
+    ROW_DATA *pRow = NULL;
+    TABLE_STRUCTURE *pTabStruct = NULL;
+    DB_QUERY_RESULT_SET *pDbQrs = NULL;
+
+    pDbQrs = malloc(sizeof(DB_QUERY_RESULT_SET));
+    if(!pDbQrs)
+        goto err;
+
+    pTabStruct = NewTableStruct();
+    if(!pTabStruct)
+        goto err;
+
+    pRow = NewRowNode(0);
+    if(!pRow)
+        goto err;
+
+    pDbQrs->nTableSize = 0;
+    pDbQrs->nRowCounter = 0;
+    pDbQrs->pTableStruct = pTabStruct;
+    pDbQrs->pRow = pRow;
+    pDbQrs->pRowCursor = pRow->List.next;
+    pDbQrs->hDbc = hDbc;
+    pDbQrs->hStmt= hStmt;
+
+    pDbQrs->New = NewRowNode;
+    pDbQrs->Free = FreeDBRow;
+    pDbQrs->Next = FetchNextRow;
+    pDbQrs->AddHead = DBRowAddHead;
+    pDbQrs->AddTail = DBRowAddTail;
+    pDbQrs->Destroy = FreeDbQuerySet;
+
+    return pDbQrs;
+
+err:
+  if(pRow)
+      free(pRow);
+  if(pTabStruct)
+      free(pTabStruct);
+  if(pDbQrs)
+      free(pDbQrs);
+  return NULL;
+}
+
+void FreeDbQuerySet(DB_QUERY_RESULT_SET **pDbQrs)
+{
+    if(!pDbQrs || !*pDbQrs)
+        return ;
+
+    DB_QUERY_RESULT_SET *dbset = *pDbQrs;
+
+    if(dbset->pTableStruct)
+    {
+        dbset->pTableStruct->Free(dbset->pTableStruct);
+        free(dbset->pTableStruct);
+    }
+
+    if(dbset->pRow)
+    {
+        dbset->Free(&(*pDbQrs)->pRow);
+    }
+    
+    free(dbset);
+    dbset=NULL;
+    pDbQrs=NULL;
+
+    return;
+}
+
+void FreeDBRow(ROW_DATA **pRow)
+{
+    list_head *n, *pos, *root;
+
+    if(!pRow || !*pRow)
+        return;
+
+    ROW_DATA *entry;
+
+    root = &(*pRow)->List;
+
+    list_for_each_safe(pos, n, root)
+    {
+        list_del(pos);
+        entry = list_entry(pos, ROW_DATA, List);
+        free(entry);
+    }
+
+    free(*pRow);
+    *pRow = NULL;
+
+    return;
+}
+
+int DBRowAddHead(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)
+{
+    if(!pDbQrs || !pRow)
+    {
+        return DBOP_NO;
+    }
+
+    list_add(&pRow->List, &pDbQrs->pRow->List);
+
+    return DBOP_OK;
+}
+
+int DBRowAddTail(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)
+{
+    if(!pDbQrs || !pRow)
+    {
+        return DBOP_NO;
+    }
+
+    list_add_tail(&pRow->List, &pDbQrs->pRow->List);
+
+    return DBOP_OK;
+}
+
+int FetchNextRow(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)
+{
+    ROW_DATA *row;
+    list_head *cur = pDbQrs->pRowCursor;
+
+    if(!pDbQrs || !pRow)
+        return -1;
+
+    if(/*list_empty(cur) ||*/ cur->next==&pDbQrs->pRow->List)
+    {
+        pDbQrs->pRowCursor=&pDbQrs->pRow->List;
+        return 1;
+    }
+
+    row = list_entry(pDbQrs->pRowCursor, ROW_DATA, List);
+    pDbQrs->pRowCursor = row->List.next;
+    printf("name=%s\n", row->pValue);
+
+    pRow = row;
+
+    return 0;
 }
