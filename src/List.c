@@ -77,7 +77,8 @@ int main()
     sprintf(row->pValue, "%s", "liuyunfeng");
     pDbQrs->AddHead(pDbQrs, row);
 
-    while(0==pDbQrs->Next(pDbQrs, row))
+		row=NULL;
+    while(0==pDbQrs->Next(pDbQrs, &row))
     {
         Log(log, MESSAGE, "length=%d value=%s\n", row->nLength, row->pValue);
     }
@@ -88,8 +89,10 @@ int main()
     list_for_each_safe(pos, n, pDbQrs->pRowCursor)
     {
         row=list_entry(pos, ROW_DATA, List);
-        Log(log, MESSAGE, "length=%d value=%s\n", row->nLength, row->pValue);
+        Log(log, MESSAGE, "length=%d value=%s list=%p\n", row->nLength, row->pValue, &row->List);
     }
+    Log(log, MESSAGE, "----------------------------------------------\n");
+
 
     pDbQrs->Destroy(&pDbQrs);
 

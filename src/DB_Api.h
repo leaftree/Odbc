@@ -96,12 +96,12 @@ struct DB_QUERY_RESULT_SET
 	void             *(*New)     (int nSize);
 	void              (*Free)    (ROW_DATA **);
 	void              (*Destroy) (DB_QUERY_RESULT_SET **);
-	int               (*Next)    (DB_QUERY_RESULT_SET *, ROW_DATA *);
+	int               (*Next)    (DB_QUERY_RESULT_SET *, ROW_DATA **);
 	int               (*AddHead) (DB_QUERY_RESULT_SET *, ROW_DATA *);
 	int               (*AddTail) (DB_QUERY_RESULT_SET *, ROW_DATA *);
 };
 
-int FetchNextRow(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow);
+int FetchNextRow(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA **pRow);
 void *InitDbQuerySet(SQLHDBC hDbc, SQLHSTMT hStmt);
 void FreeDbQuerySet(DB_QUERY_RESULT_SET **pDbQrs);
 void FreeDBRow(ROW_DATA **pRow);
@@ -114,20 +114,20 @@ int DBRowAddTail(DB_QUERY_RESULT_SET *pDBQrs, ROW_DATA *pRow);
 	list_for_each_entry(pos, &(root), list)
 
 SQLINTEGER DBApiInitEnv(SQLHENV *hEnv,
-		SQLHDBC *hDbc);
+		                    SQLHDBC *hDbc);
 
 SQLINTEGER DBApiConnectDatabase(SQLHDBC *hDbc,
-		SQLCHAR *pcaDBName,
-		SQLCHAR *pcaDBUserName,
-		SQLCHAR *pcaDBUserPassword);
+		                            SQLCHAR *pcaDBName,
+		                            SQLCHAR *pcaDBUserName,
+		                            SQLCHAR *pcaDBUserPassword);
 
 SQLINTEGER DBApiDisConnectDatabase(SQLHDBC hDbc);
 
 SQLINTEGER DBApiPreExecSQL(SQLHDBC   hDbc,
-		SQLHSTMT *hStmt);
+		                       SQLHSTMT *hStmt);
 
 SQLINTEGER DBApiExecSQL(SQLHSTMT hStmt,
-		SQLCHAR *pcaSqlStmt);
+		                    SQLCHAR *pcaSqlStmt);
 
 SQLINTEGER DBApiFreeEnv(SQLHENV hEnv);
 
@@ -135,14 +135,11 @@ SQLINTEGER DBApiFreeDbc(SQLHDBC hDbc);
 
 SQLINTEGER DBApiFreeStmt(SQLHSTMT hStmt);
 
-/*
-	 SQLINTEGER DBApiQuery(SQLHSTMT             hStmt,
-	 SQLCHAR             *pcaSqlStmt,
-	 DB_QUERY_RESULT_SET *pDBQueryRes);
-	 */
+SQLINTEGER DBApiQuery(DB_QUERY_RESULT_SET *pDBQueryRes,
+                      SQLCHAR             *pcaSqlStmt);
 
 SQLINTEGER DBApiGetErrorInfo(SQLSMALLINT hType,
-		SQLHANDLE   hHandle,
-		SQLCHAR    *pcaMsgText);
+		                         SQLHANDLE   hHandle,
+		                         SQLCHAR    *pcaMsgText);
 
 #endif /* _DB_API_H_ */

@@ -3,7 +3,7 @@
 !_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
-!_TAG_PROGRAM_VERSION	5.8	//
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 AddFieldAttrNode	DB_Api.c	/^int AddFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *new)$/;"	f
 AddFieldAttrNodeHead	DB_Api.c	/^int AddFieldAttrNodeHead(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *pNew)$/;"	f
 AddFieldAttrNodeTail	DB_Api.c	/^int AddFieldAttrNodeTail(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR *pNew)$/;"	f
@@ -27,10 +27,10 @@ DBOP_NO	DB_Api.h	31;"	d
 DBOP_OK	DB_Api.h	19;"	d
 DBOP_OK	DB_Api.h	25;"	d
 DBOP_OK	DB_Api.h	26;"	d
-DBRowAddHead	DB_Api.c	/^int DBRowAddHead(DB_QUERY_RESULT_SET *pDBQrs, ROW_DATA *pRow)$/;"	f
-DBRowAddTail	DB_Api.c	/^int DBRowAddTail(DB_QUERY_RESULT_SET *pDBQrs, ROW_DATA *pRow)$/;"	f
-DB_FOREACH_ENTRY	DB_Api.h	109;"	d
-DB_INIT_POS	DB_Api.h	107;"	d
+DBRowAddHead	DB_Api.c	/^int DBRowAddHead(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)$/;"	f
+DBRowAddTail	DB_Api.c	/^int DBRowAddTail(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)$/;"	f
+DB_FOREACH_ENTRY	DB_Api.h	113;"	d
+DB_INIT_POS	DB_Api.h	111;"	d
 DB_NO_DATA	DB_Api.h	22;"	d
 DB_NO_DATA	DB_Api.h	35;"	d
 DB_NO_DATA	DB_Api.h	36;"	d
@@ -43,8 +43,10 @@ FIELD_ATTR	DB_Api.h	/^struct FIELD_ATTR$/;"	s
 FIELD_ATTR	DB_Api.h	/^typedef struct FIELD_ATTR FIELD_ATTR;$/;"	t	typeref:struct:FIELD_ATTR
 FREE	DB_Api.c	20;"	d	file:
 FetchNextFieldAttrNode	DB_Api.c	/^int FetchNextFieldAttrNode(TABLE_STRUCTURE *pTabStruct, FIELD_ATTR **ppField)$/;"	f
-Free	DB_Api.h	/^	void             *(*Free)    (ROW_DATA *);$/;"	m	struct:DB_QUERY_RESULT_SET
+FetchNextRow	DB_Api.c	/^int FetchNextRow(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA **pRow)$/;"	f
+Free	DB_Api.h	/^	void              (*Free)    (ROW_DATA **);$/;"	m	struct:DB_QUERY_RESULT_SET
 Free	DB_Api.h	/^	void  (*Free)     (TABLE_STRUCTURE *);$/;"	m	struct:TABLE_STRUCTURE
+FreeDBRow	DB_Api.c	/^void FreeDBRow(ROW_DATA **pRow)$/;"	f
 FreeDbQuerySet	DB_Api.c	/^void FreeDbQuerySet(DB_QUERY_RESULT_SET **pDbQrs)$/;"	f
 FreeFieldAttrList	DB_Api.c	/^void FreeFieldAttrList(TABLE_STRUCTURE *pTabStruct)$/;"	f
 INIT_LIST_HEAD	List.h	/^static inline void INIT_LIST_HEAD(struct list_head *list)$/;"	f
@@ -66,6 +68,7 @@ NewField	DB_Api.h	/^	void *(*NewField) ();$/;"	m	struct:TABLE_STRUCTURE
 NewFieldAttrNode	DB_Api.c	/^void *NewFieldAttrNode()$/;"	f
 NewRowNode	DB_Api.c	/^void *NewRowNode(int nSize)$/;"	f
 NewTableStruct	DB_Api.c	/^void *NewTableStruct()$/;"	f
+Next	DB_Api.h	/^	int               (*Next)    (DB_QUERY_RESULT_SET *, ROW_DATA **);$/;"	m	struct:DB_QUERY_RESULT_SET
 Next	DB_Api.h	/^	int   (*Next)     (TABLE_STRUCTURE *, FIELD_ATTR **);$/;"	m	struct:TABLE_STRUCTURE
 ROW_DATA	DB_Api.h	/^typedef struct ROW_DATA$/;"	s
 ROW_DATA	DB_Api.h	/^} ROW_DATA;$/;"	t	typeref:struct:ROW_DATA
@@ -139,6 +142,7 @@ offsetof	List.h	24;"	d
 pCursor	DB_Api.h	/^	list_head  *pCursor;$/;"	m	struct:TABLE_STRUCTURE
 pListRoot	DB_Api.h	/^	list_head  *pListRoot;$/;"	m	struct:TABLE_STRUCTURE
 pRow	DB_Api.h	/^	ROW_DATA         *pRow;$/;"	m	struct:DB_QUERY_RESULT_SET
+pRowCursor	DB_Api.h	/^	list_head        *pRowCursor;$/;"	m	struct:DB_QUERY_RESULT_SET
 pTableStruct	DB_Api.h	/^	TABLE_STRUCTURE  *pTableStruct;$/;"	m	struct:DB_QUERY_RESULT_SET
 pValue	DB_Api.h	/^	void             *pValue;$/;"	m	struct:ROW_DATA
 prev	List.h	/^	struct list_head *prev, *next;$/;"	m	struct:list_head	typeref:struct:list_head::list_head
@@ -149,3 +153,4 @@ szTableName	DB_Api.h	/^	char        szTableName[128];$/;"	m	struct:TABLE_STRUCTU
 true	DB_Api.h	10;"	d
 true	DB_Api.h	11;"	d
 writelog	DB_Api.c	/^void writelog(const char *fmt, ...)$/;"	f
+xFree	List.c	7;"	d	file:
