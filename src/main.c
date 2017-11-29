@@ -1,8 +1,9 @@
 
 #include "main.h"
 #include <rpc/types.h>
-#define Tracer(str) __tracer(__FILE__, __LINE__, __func__, str)
-#define TracerNumber(v) __tracerNumber(__FILE__, __LINE__, __func__, v)
+#include <mcheck.h>
+
+Logger logger;
 
 #if 0
 static void ListDSN(SQLHANDLE hEnv);
@@ -297,13 +298,11 @@ int main()
 
     if(DBOP_NO == DBApiInitEnv(&hEnv, &hDbc))
     {
-        Tracer("DBApiInitEnv");
         return 1;
     }
 
     if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"root", (u_char*)"123kbc,./"))
     {
-        Tracer("DBApiConnectDatabase");
         return 1;
     }
 
@@ -312,7 +311,6 @@ int main()
         return 1;
     }
 
-    Tracer("DBApiExecSQL beg");
     sprintf((char*)caSqlStmt, "%s", "use fyl");
 
     if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
@@ -335,10 +333,8 @@ int main()
         iRet = DBApiQuery( hStmt,  caSqlStmt, &pstDbQueryHandle);
         if(iRet != DBOP_OK)
         {
-            Tracer("fail to query data");
         }
 
-        Tracer("end to query data");
 
         //LogDumpHex("LogDumpHex", pstDbQueryHandle->ResultSet, pstDbQueryHandle->ResultCounter*pstDbQueryHandle->TableSize);
         for(i=0; i<pstDbQueryHandle->ResultCounter; i++)
@@ -360,7 +356,6 @@ int main()
 
         DBApiFreeStmt(hStmt);
     }
-    Tracer("Display results end");
 
     //free(pstDbQueryHandle->ResultSet);
     //free(pstDbQueryHandle);
@@ -369,15 +364,18 @@ int main()
     DBApiFreeDbc(hDbc);
     DBApiFreeEnv(hEnv);
 
-    Tracer("Main End");
-
     return 0;
 }
 #endif
 
-#if 0
 int main()
 {
+    setenv("MALLOC_TRACE", "mtrace.log", 1);
+    mtrace();
+    //InitLogger(&logger, MESSAGE, "", "app.log");
+    InitLogger(&logger, MESSAGE, "", "");
+    Log(logger, MESSAGE, "Init logger finish.\n");
+
     SQLRETURN iRet = SQL_SUCCESS;
 
     SQLHENV  hEnv  = NULL;
@@ -391,40 +389,57 @@ int main()
 
     if(DBOP_NO == DBApiInitEnv(&hEnv, &hDbc))
     {
-        Tracer("DBApiInitEnv");
+        Log(logger, MESSAGE, "DBApiInitEnv fail\n");
         return 1;
     }
+    /*
 
     if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"root", (u_char*)"123kbc,./"))
     {
-        Tracer("DBApiConnectDatabase");
+        Log(logger, ERROR, "DBApiConnectDatabase fail\n");
         return 1;
     }
 
-    Tracer("fu");
-    DB_QUERY_RESULT_SET stDbQrs;
-
-    DBApiQueryInit(&stDbQrs, hDbc);
-    Tracer("fuck");
-
-    /*
     if(DBOP_NO == DBApiPreExecSQL(hDbc, &hStmt))
     {
+        Log(logger, ERROR, "DBApiPreExecSQL fail\n");
         return 1;
     }
-    */
 
-    Tracer("DBApiExecSQL beg");
+    DB_QUERY_RESULT_SET *dbset = InitDbQuerySet(hDbc, hStmt);
+
     sprintf((char*)caSqlStmt, "%s", "use fyl");
 
-    //if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
-    if(DBOP_NO == DBApiExecSQL(stDbQrs.hStmt, caSqlStmt))
+    if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
     {
+        Log(logger, ERROR, "DBApiExecSQL fail\n");
         return 1;
     }
-    Tracer("DBApiExecSQL end");
- DBApiQueryFree(&stDbQrs);
-    //DBApiFreeStmt(hStmt);
+
+    sprintf((char*)caSqlStmt, "%s", "select * from BASI_STATION_INFO");
+    if(DBOP_OK != DBApiQuery(dbset, caSqlStmt))
+    {
+        Log(logger, ERROR, "DBApiQuery fail\n");
+        return 1;
+    }
+
+    ROW_DATA *row = NULL;
+
+    Log(logger, MESSAGE, "CODE RESOURCE[%s(%d)-%s].\n", __FILE__, __LINE__, __func__);
+    while(0==(i=dbset->Next(dbset, &row)))
+    {
+        LogDumpHex(logger, MESSAGE, (char*)row->pValue, row->nLength, "DumpHex");
+    }
+    Log(logger, MESSAGE, "CODE RESOURCE[%s(%d)-%s]. i=%d\n", __FILE__, __LINE__, __func__, i);
+
+    dbset->Destroy(&dbset);
+    */
+
+    DBApiFreeStmt(hStmt);
+    DBApiDisConnectDatabase(hDbc);
+    DBApiFreeDbc(hDbc);
+    DBApiFreeEnv(hEnv);
+
+    muntrace();
     return 0;
 }
-#endif

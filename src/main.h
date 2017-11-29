@@ -17,4 +17,6 @@
 #include "List.h"
 #include "DB_Api.h"
 
+#define xFree(var) var=(var==NULL?NULL:(free(var)), NULL)
+
 #endif /*__MAIN_H__*/

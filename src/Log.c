@@ -79,7 +79,7 @@ void LogDumpHex(Logger log, LOGTYPE type, const char *pMem, unsigned int size, c
     const char *pDumpMem = pMem;
     const char *pDumpTitle = pTitle;
     char szAsciiCode[24] = "";
-    char chBtye;
+    unsigned char chBtye;
 
     if(!pDumpMem || TOTAL_SIZE<1)
         return;

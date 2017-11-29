@@ -4,8 +4,8 @@
 #include <mcheck.h>
 
 //#define xFree(var) var=(var==NULL?NULL:(free(var), NULL)
-#define xFree(var) var=(var==NULL?NULL:(free(var)), NULL)
 
+#if 0
 int main()
 {
     setenv("MALLOC_TRACE", "mtrace.log", 1);
@@ -102,3 +102,4 @@ int main()
 
     return 0;
 }
+#endif

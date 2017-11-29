@@ -4,6 +4,8 @@ SQLHANDLE ghEnv = NULL;
 SQLHANDLE ghDbc = NULL;
 SQLHANDLE ghStmt = NULL;
 
+extern Logger logger;
+
 void writelog(const char *fmt, ...)
 {
 #define K8 (1024*8)
@@ -231,7 +233,10 @@ SQLINTEGER __DBGetColsInfo(DB_QUERY_RESULT_SET *pDbQueryRes)
 				pDbQueryRes->pTableStruct->nTotalSize += nColSize;
 				pDbQueryRes->pTableStruct->nFieldCounter += 1;
 
-				pDbQueryRes->pTableStruct->AddHead(pDbQueryRes->pTableStruct, new);
+        if(pDbQueryRes->pTableStruct->nMaxFieldSize < nColSize)
+            pDbQueryRes->pTableStruct->nMaxFieldSize = nColSize;
+
+				pDbQueryRes->pTableStruct->AddTail(pDbQueryRes->pTableStruct, new);
     }
 
 		pDbQueryRes->nTableSize = pDbQueryRes->pTableStruct->nTotalSize;
@@ -243,10 +248,14 @@ SQLINTEGER DBApiQuery(DB_QUERY_RESULT_SET *pDbQueryRes,
                       SQLCHAR             *pszSqlStmt)
 {
     SQLRETURN   nRet    = SQL_SUCCESS;
-    SQLLEN      iRowCnt = 0; /* Row counter of query result     */
+    SQLLEN      nRowCnt = 0; /* Row counter of query result     */
     SQLSMALLINT nColCnt = 0; /* Columns counter of query result */
-    //SQLINTEGER  iResOfs = 0;
+    SQLSMALLINT iColLoop= 0;
+    SQLSMALLINT nColOfs = 0;
 		SQLHSTMT    hStmt   = NULL;
+
+    FIELD_ATTR   *pFieldAttr = NULL;
+    TABLE_STRUCTURE *pTblCurs = NULL;
 
 		if(!pDbQueryRes || !pszSqlStmt || !*pszSqlStmt)
 		{
@@ -254,6 +263,7 @@ SQLINTEGER DBApiQuery(DB_QUERY_RESULT_SET *pDbQueryRes,
 		}
 
 		hStmt = pDbQueryRes->hStmt;
+    pTblCurs = pDbQueryRes->pTableStruct;
 
     nRet = SQLExecDirect(pDbQueryRes->hStmt, pszSqlStmt, SQL_NTS);
     if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
@@ -266,18 +276,42 @@ SQLINTEGER DBApiQuery(DB_QUERY_RESULT_SET *pDbQueryRes,
         return DBOP_NO;
     }
 
-    nRet = SQLRowCount(pDbQueryRes->hStmt, &iRowCnt);
+    nRet = SQLRowCount(pDbQueryRes->hStmt, &nRowCnt);
     if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, pDbQueryRes->hStmt, nRet))
     {
         goto err;
     }
 
+    nColCnt = pDbQueryRes->pTableStruct->nFieldCounter;
+    pDbQueryRes->nRowCounter = nRowCnt;
+
     SQLLEN iRealSize = 0;
-    SQLCHAR caColVal[100] = "";
+    SQLCHAR *pszColVal = malloc(pTblCurs->nMaxFieldSize);
+
+    if(!pszColVal)
+    {
+        return DBOP_NO;
+    }
+    memset(pszColVal, 0x0, pTblCurs->nMaxFieldSize);
+
+    /*
+    Log(logger, MESSAGE, "---------------------------------------------\n");
+    while(1)
+    {
+        if(0!=pTblCurs->Next(pTblCurs, &pFieldAttr))
+            break;
+        Log(logger, MESSAGE, "LENGTH=%02d NAME=%s\n", pFieldAttr->nFieldSize, pFieldAttr->szFieldName);
+    }
+    Log(logger, MESSAGE, "---------------------------------------------\n");
+
+    return 0;
+    */
+
+ROW_DATA *new = NULL;
     for(;;)
     {
+        new = NULL;
         nRet =  SQLFetch(hStmt);
-
         if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
         {
             if(nRet == SQL_ERROR)
@@ -288,40 +322,66 @@ SQLINTEGER DBApiQuery(DB_QUERY_RESULT_SET *pDbQueryRes,
             break;
         }
 
-        SQLSMALLINT iColLoop;
-        //SQLSMALLINT iFieldMaxSize = 0;
+        new = pDbQueryRes->New(pTblCurs->nTotalSize + pTblCurs->nFieldCounter);
+        if(!new)
+        {
+            return DBOP_NO;
+        }
+
+    Log(logger, ERROR, "nColCnt=%d new->nLength=%d new=%p new->List=%p\n", nColCnt, new->nLength, new, new->List);
+
+        nColOfs = 0;
         for(iColLoop=1; iColLoop <= nColCnt; iColLoop++)
         {
-     //       iFieldMaxSize = (stTableList.field_attr_list+iColLoop-1)->FieldSize;
-            nRet = SQLGetData(hStmt, iColLoop, SQL_C_CHAR, caColVal, 100, &iRealSize);
-
+            nRet = SQLGetData(hStmt, iColLoop, SQL_C_CHAR, pszColVal, pTblCurs->nMaxFieldSize, &iRealSize);
             if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
             {
                 if(nRet == SQL_ERROR)
+                {
+                    Log(logger, ERROR, "Fetch fail\n");
                     break;
+                }
             }
             else if(nRet == SQL_NO_DATA)
             {
+                Log(logger, MESSAGE, "Ended\n");
                 break;
             }
-            printf("%s ", caColVal);
-            /*
-            memcpy(pstDBQueryRes->ResultSet+iResOfs, (void*)caColVal, iRealSize);
-            iResOfs += (iFieldMaxSize+1);
-            */
+
+            if(1==pTblCurs->Next(pTblCurs, &pFieldAttr))
+                pTblCurs->Next(pTblCurs, &pFieldAttr);
+
+            Log(logger, MESSAGE, "pszColVal=%s size=%d name=%s\n", pszColVal, pFieldAttr->nFieldSize, pFieldAttr->szFieldName);
+
+            memcpy(new->pValue+nColOfs, pszColVal, iRealSize);
+            nColOfs+=pFieldAttr->nFieldSize+1;
         }
+        Log(logger, MESSAGE, "添加行记录开始\n");
+        pDbQueryRes->AddTail(pDbQueryRes, new);
+        Log(logger, MESSAGE, "添加行记录结束 new->poiter=%p\n", new->List);
+    }
+    Log(logger, ERROR, "可以?\n");
+    list_head *pos;
+    ROW_DATA *nnew = NULL;
+    /*
+    list_for_each(pos, &pDbQueryRes->pRow->List)
+    {
+        nnew = list_entry(pos, ROW_DATA, List);
+        LogDumpHex(logger, MESSAGE, (char*)nnew->pValue, nnew->nLength, "???");
     }
 
-    /*
-    *pDBQueryRes = pstDBQueryRes;
-    (*pDBQueryRes)->ResultCounter   = iRowCnt;
-    (*pDBQueryRes)->TableSize       = stTableList.TotalSize;
+    ROW_DATA *row = NULL;
+    while(0==pDbQueryRes->Next(pDbQueryRes, &row))
+    {
+        LogDumpHex(logger, MESSAGE, (char*)row->pValue, pDbQueryRes->nTableSize, "我爱思源");
+    }
     */
 
-
+    xFree(pszColVal);
     return DBOP_OK;
 
 err:
+    xFree(pszColVal);
     return DBOP_NO;
 }
 
@@ -458,6 +518,10 @@ void *NewTableStruct()
     list_head *root = malloc(sizeof(list_head));
     INIT_LIST_HEAD(root);
 
+    pTabStruct->nTotalSize    = 0;
+    pTabStruct->nMaxFieldSize = 0;
+    pTabStruct->nFieldCounter = 0;
+
     pTabStruct->pCursor   = root;
     pTabStruct->pListRoot = root;
     pTabStruct->Free      = FreeFieldAttrList;
@@ -475,9 +539,13 @@ void *NewRowNode(int nSize)
     if(!new)
         return NULL;
 
+    memset(new, 0x0, nSize);
+
     new->nLength = nSize;
-    new->pValue = new+sizeof(ROW_DATA);
+    new->pValue = (char*)new+sizeof(ROW_DATA);
     INIT_LIST_HEAD(&new->List);
+
+    Log(logger, MESSAGE, "%s nSize=%d row=%p list=%p\n", __func__, nSize, new, new->List);
 
     return new;
 }
@@ -584,18 +652,21 @@ int DBRowAddHead(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)
     }
 
     list_add(&pRow->List, &pDbQrs->pRow->List);
+    printf("xxxxx\n");
 
     return DBOP_OK;
 }
 
 int DBRowAddTail(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)
 {
+    printf("yyyyy\n");
     if(!pDbQrs || !pRow)
     {
         return DBOP_NO;
     }
 
     list_add_tail(&pRow->List, &pDbQrs->pRow->List);
+    printf("xxxxx\n");
 
     return DBOP_OK;
 }

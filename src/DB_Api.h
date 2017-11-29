@@ -58,6 +58,7 @@ struct FIELD_ATTR
 struct TABLE_STRUCTURE
 {
 	int         nTotalSize;
+	int         nMaxFieldSize;
 	int         nFieldCounter;
 	char        szTableName[128];
 	list_head  *pCursor;
