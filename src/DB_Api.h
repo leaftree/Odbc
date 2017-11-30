@@ -36,9 +36,10 @@
 # define DB_NO_DATA (NOT_FOUND)
 #endif
 
-typedef struct list_head list_head;
-typedef struct FIELD_ATTR FIELD_ATTR;
-typedef struct TABLE_STRUCTURE TABLE_STRUCTURE;
+typedef struct list_head           list_head;
+typedef struct FIELD_ATTR          FIELD_ATTR;
+typedef struct TABLE_STRUCTURE     TABLE_STRUCTURE;
+typedef struct DB_TABLE_INFO_SET   DB_TABLE_INFO_SET;
 typedef struct DB_QUERY_RESULT_SET DB_QUERY_RESULT_SET;
 
 /**
@@ -80,6 +81,24 @@ typedef struct ROW_DATA
 	int               nLength;
 	void             *pValue;
 } ROW_DATA;
+
+/**
+ * 库表结构列表
+ */
+struct DB_TABLE_INFO_SET
+{
+	list_head     List;
+	char         *pzTableName;
+	TABLE_STRUCT *pTableStruct;
+};
+
+/**
+ * 库表结构列表头
+ */
+typedef struct DB_TABLE_SET_HEAD
+{
+	list_head List;
+} DB_TABLE_SET_HEAD;
 
 /**
  * 库表查询结果集合

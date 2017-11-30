@@ -1,9 +1,5 @@
 #include "main.h"
 
-SQLHANDLE ghEnv = NULL;
-SQLHANDLE ghDbc = NULL;
-SQLHANDLE ghStmt = NULL;
-
 extern Logger logger;
 
 void writelog(const char *fmt, ...)
@@ -691,4 +687,31 @@ int FetchNextRow(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA **pRow)
     *pRow = row;
 
     return 0;
+}
+
+void *NewTableInfoSet()
+{
+	DB_TABLE_INFO_SET *pTblInfoSet = NULL;
+
+	pTblInfoSet = malloc(sizeof(DB_TABLE_INFO_SET));
+	if(!pTblInfoSet)
+		return NULL;
+
+	pTblInfoSet->pTableStruct = NULL;
+	pTblInfoSet->pszTableName = NULL;
+	INIT_LIST(&pTblInfoSet->List);
+
+	pTblInfoSet->pTableStruct = NewTableStruct();
+	if(!pTblInfoSet->pTableStruct)
+	{
+		free(pTblInfoSet);
+		return NULL;
+	}
+
+	return pTblInfoSet;
+}
+
+int AddTableInfoHead(DB_TABLE_INFO_SET *pTblInfoSet)
+{
+	;
 }
