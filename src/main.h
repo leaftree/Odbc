@@ -19,4 +19,11 @@
 
 #define xFree(var) var=(var==NULL?NULL:(free(var)), NULL)
 
+#define return_val_if_fail_warning(a, b, c) printf("%s\n", c)
+
+#define return_val_if_fail(expr, val) do {\
+	if(expr) { } else { \
+	return_val_if_fail_warning("≤‚ ‘", "≤‚ ‘", #expr); \
+	return(val); }}while(0)\
+
 #endif /*__MAIN_H__*/

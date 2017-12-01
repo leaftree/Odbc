@@ -5,6 +5,13 @@
 
 Logger logger;
 
+int func()
+{
+    return_val_if_fail(10==11, 100);
+    printf("abc\n");
+    return 0;
+}
+
 #if 0
 static void ListDSN(SQLHANDLE hEnv);
 static void GetError(SQLINTEGER hType, SQLHENV EnvironmentHandle, SQLHDBC ConnectionHandle, SQLHSTMT StatementHandle);
@@ -368,15 +375,30 @@ int main()
 }
 #endif
 
+void ShowInfo(ST_BASI_STATION_INFO_extbl *bsi)
+{
+    Log(logger, MESSAGE, "caLineId=%s\t"
+            "caStationId=%s\t"
+            "caCNName=%s\t"
+            "caENName=%s\t"
+            "caLocationType=%s\t"
+            "caLocationValue=%s\n",
+            bsi->caLineId,
+            bsi->caStationId,
+            bsi->caCNName,
+            bsi->caENName,
+            bsi->caLocationType,
+            bsi->caLocationValue
+            );
+}
+
 int main()
 {
-    setenv("MALLOC_TRACE", "mtrace.log", 1);
-    mtrace();
+    //setenv("MALLOC_TRACE", "mtrace.log", 1);
+    //mtrace();
     //InitLogger(&logger, MESSAGE, "", "app.log");
     InitLogger(&logger, MESSAGE, "", "");
     Log(logger, MESSAGE, "Init logger finish.\n");
-
-    SQLRETURN iRet = SQL_SUCCESS;
 
     SQLHENV  hEnv  = NULL;
     SQLHDBC  hDbc  = NULL;
@@ -385,14 +407,13 @@ int main()
     SQLCHAR caSqlStmt[1024] = "";
 
     int i=0;
-    ST_BASI_STATION_INFO_extbl stBSI;
+    ST_BASI_STATION_INFO_extbl *bsi;
 
     if(DBOP_NO == DBApiInitEnv(&hEnv, &hDbc))
     {
         Log(logger, MESSAGE, "DBApiInitEnv fail\n");
         return 1;
     }
-    /*
 
     if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"root", (u_char*)"123kbc,./"))
     {
@@ -428,18 +449,32 @@ int main()
     Log(logger, MESSAGE, "CODE RESOURCE[%s(%d)-%s].\n", __FILE__, __LINE__, __func__);
     while(0==(i=dbset->Next(dbset, &row)))
     {
-        LogDumpHex(logger, MESSAGE, (char*)row->pValue, row->nLength, "DumpHex");
+        bsi = row->pValue;
+        ShowInfo(bsi);
     }
     Log(logger, MESSAGE, "CODE RESOURCE[%s(%d)-%s]. i=%d\n", __FILE__, __LINE__, __func__, i);
 
     dbset->Destroy(&dbset);
-    */
+
+    DBApiFreeStmt(hStmt);
+
+    if(DBOP_NO == DBApiPreExecSQL(hDbc, &hStmt))
+    {
+        Log(logger, ERROR, "DBApiPreExecSQL fail\n");
+        return 1;
+    }
+
+    SQLCHAR szSqlStmt[1024] = "";
+    sprintf(szSqlStmt, "insert into BASI_STATION_INFO values('11', '1111', 'ÖÐÎÄ', 'English', '99', '9999')");
+    //DBApiInsertSQL(hStmt, szSqlStmt);
 
     DBApiFreeStmt(hStmt);
     DBApiDisConnectDatabase(hDbc);
     DBApiFreeDbc(hDbc);
     DBApiFreeEnv(hEnv);
 
-    muntrace();
+   printf("%d\n", func());
+
+    //muntrace();
     return 0;
 }

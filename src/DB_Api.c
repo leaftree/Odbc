@@ -1,5 +1,7 @@
 #include "main.h"
 
+static DB_TABLE_SET_HEAD *g_Table_Info_Set = NULL;
+
 extern Logger logger;
 
 void writelog(const char *fmt, ...)
@@ -67,14 +69,14 @@ static SQLINTEGER __DBApiCheckSQLReturn(SQLSMALLINT hType,
     {
         if(DBOP_OK == DBApiGetErrorInfo(hType, hHandle, caMessageText))
         {
-            writelog("%s", caMessageText);
+            Log(logger, ERROR, "[%s(%d)-%s] %s\n", __FILE__, __LINE__, __func__, caMessageText);
         }
     }
     else if(SQL_SUCCESS != iRetValue)
     {
         if(DBOP_OK == DBApiGetErrorInfo(hType, hHandle, caMessageText))
         {
-            writelog("%s", caMessageText);
+            Log(logger, ERROR, "[%s(%d)-%s] %s\n", __FILE__, __LINE__, __func__, caMessageText);
         }
         return DBOP_NO;
     }
@@ -282,31 +284,17 @@ SQLINTEGER DBApiQuery(DB_QUERY_RESULT_SET *pDbQueryRes,
     pDbQueryRes->nRowCounter = nRowCnt;
 
     SQLLEN iRealSize = 0;
-    SQLCHAR *pszColVal = malloc(pTblCurs->nMaxFieldSize);
+    char *pszColVal = (char*)malloc(pTblCurs->nMaxFieldSize);
 
     if(!pszColVal)
     {
         return DBOP_NO;
     }
+    *pszColVal = 0;
     memset(pszColVal, 0x0, pTblCurs->nMaxFieldSize);
 
-    /*
-    Log(logger, MESSAGE, "---------------------------------------------\n");
-    while(1)
-    {
-        if(0!=pTblCurs->Next(pTblCurs, &pFieldAttr))
-            break;
-        Log(logger, MESSAGE, "LENGTH=%02d NAME=%s\n", pFieldAttr->nFieldSize, pFieldAttr->szFieldName);
-    }
-    Log(logger, MESSAGE, "---------------------------------------------\n");
-
-    return 0;
-    */
-
-ROW_DATA *new = NULL;
     for(;;)
     {
-        new = NULL;
         nRet =  SQLFetch(hStmt);
         if(nRet == SQL_ERROR || nRet == SQL_SUCCESS_WITH_INFO)
         {
@@ -318,13 +306,11 @@ ROW_DATA *new = NULL;
             break;
         }
 
-        new = pDbQueryRes->New(pTblCurs->nTotalSize + pTblCurs->nFieldCounter);
+        ROW_DATA *new = pDbQueryRes->New(pTblCurs->nTotalSize + pTblCurs->nFieldCounter);
         if(!new)
         {
             return DBOP_NO;
         }
-
-    Log(logger, ERROR, "nColCnt=%d new->nLength=%d new=%p new->List=%p\n", nColCnt, new->nLength, new, new->List);
 
         nColOfs = 0;
         for(iColLoop=1; iColLoop <= nColCnt; iColLoop++)
@@ -347,31 +333,13 @@ ROW_DATA *new = NULL;
             if(1==pTblCurs->Next(pTblCurs, &pFieldAttr))
                 pTblCurs->Next(pTblCurs, &pFieldAttr);
 
-            Log(logger, MESSAGE, "pszColVal=%s size=%d name=%s\n", pszColVal, pFieldAttr->nFieldSize, pFieldAttr->szFieldName);
-
+            //Log(logger, MESSAGE, "pszColVal=%s iRealSize=%d\n", pszColVal, iRealSize);
             memcpy(new->pValue+nColOfs, pszColVal, iRealSize);
             nColOfs+=pFieldAttr->nFieldSize+1;
         }
-        Log(logger, MESSAGE, "添加行记录开始\n");
         pDbQueryRes->AddTail(pDbQueryRes, new);
-        Log(logger, MESSAGE, "添加行记录结束 new->poiter=%p\n", new->List);
     }
-    Log(logger, ERROR, "可以?\n");
     list_head *pos;
-    ROW_DATA *nnew = NULL;
-    /*
-    list_for_each(pos, &pDbQueryRes->pRow->List)
-    {
-        nnew = list_entry(pos, ROW_DATA, List);
-        LogDumpHex(logger, MESSAGE, (char*)nnew->pValue, nnew->nLength, "???");
-    }
-
-    ROW_DATA *row = NULL;
-    while(0==pDbQueryRes->Next(pDbQueryRes, &row))
-    {
-        LogDumpHex(logger, MESSAGE, (char*)row->pValue, pDbQueryRes->nTableSize, "我爱思源");
-    }
-    */
 
     xFree(pszColVal);
     return DBOP_OK;
@@ -541,8 +509,6 @@ void *NewRowNode(int nSize)
     new->pValue = (char*)new+sizeof(ROW_DATA);
     INIT_LIST_HEAD(&new->List);
 
-    Log(logger, MESSAGE, "%s nSize=%d row=%p list=%p\n", __func__, nSize, new, new->List);
-
     return new;
 }
 
@@ -648,21 +614,18 @@ int DBRowAddHead(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)
     }
 
     list_add(&pRow->List, &pDbQrs->pRow->List);
-    printf("xxxxx\n");
 
     return DBOP_OK;
 }
 
 int DBRowAddTail(DB_QUERY_RESULT_SET *pDbQrs, ROW_DATA *pRow)
 {
-    printf("yyyyy\n");
     if(!pDbQrs || !pRow)
     {
         return DBOP_NO;
     }
 
     list_add_tail(&pRow->List, &pDbQrs->pRow->List);
-    printf("xxxxx\n");
 
     return DBOP_OK;
 }
@@ -699,7 +662,7 @@ void *NewTableInfoSet()
 
 	pTblInfoSet->pTableStruct = NULL;
 	pTblInfoSet->pszTableName = NULL;
-	INIT_LIST(&pTblInfoSet->List);
+	INIT_LIST_HEAD(&pTblInfoSet->List);
 
 	pTblInfoSet->pTableStruct = NewTableStruct();
 	if(!pTblInfoSet->pTableStruct)
@@ -711,7 +674,76 @@ void *NewTableInfoSet()
 	return pTblInfoSet;
 }
 
-int AddTableInfoHead(DB_TABLE_INFO_SET *pTblInfoSet)
+int AddTableInfoHead(DB_TABLE_SET_HEAD *pHead, DB_TABLE_INFO_SET *pNew)
 {
-	;
+    list_add(&pHead->List, &pHead->List);
+	return DBOP_OK;
+}
+
+void *InitTableInfoSet()
+{
+    DB_TABLE_SET_HEAD *head = malloc(sizeof(DB_TABLE_SET_HEAD));
+
+    INIT_LIST_HEAD(&head->List);
+
+    head->New = NewTableInfoSet;
+    //head->Find = FindTableInfo;
+    //head->GetCol = GetTableStruct;
+    head->AddHead = AddTableInfoHead;
+
+    return head;
+}
+
+void *FindTableInfo(DB_TABLE_SET_HEAD *head, char *pszTableName)
+{
+    list_head *pos = NULL;
+    DB_TABLE_INFO_SET *pTable = NULL;
+
+    list_for_each(pos, &head->List)
+    {
+        pTable = list_entry(pos, DB_TABLE_INFO_SET, List);
+        if(strcmp(pTable->pszTableName, pszTableName)==0)
+            break;
+        else
+            pTable = NULL;
+    }
+
+    return pTable;
+}
+
+int GetTableStruct(DB_TABLE_SET_HEAD *head, char *pszTableName)
+{
+    //pTabStruct = NewTableStruct();
+}
+
+int DBApiInsertSQL(SQLHDBC hStmt, SQLCHAR *pszSqlStmt)
+{
+    SQLRETURN nRet = SQL_SUCCESS;
+
+    nRet = SQLExecDirect(hStmt, pszSqlStmt, SQL_NTS);
+    if(DBOP_OK != __DBApiCheckSQLReturn(SQL_HANDLE_STMT, hStmt, nRet))
+    {
+        return DBOP_NO;
+    }
+    return DBOP_OK;
+}
+
+int DBApiInsertBlock(char *pszTableName, void *pData)
+{
+    DB_TABLE_INFO_SET *pTable = NULL;
+
+    if(g_Table_Info_Set == NULL)
+        g_Table_Info_Set = InitTableInfoSet();
+
+    pTable = g_Table_Info_Set->Find(g_Table_Info_Set, pszTableName);
+
+    if(pTable == NULL)
+    {
+        //g_Table_Info_Set->GetCol(g_Table_Info_Set, pszTableName)
+        // get columns info;
+    }
+
+    // gen insert sql
+
+    return DBOP_OK;
 }

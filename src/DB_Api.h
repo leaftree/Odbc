@@ -40,6 +40,7 @@ typedef struct list_head           list_head;
 typedef struct FIELD_ATTR          FIELD_ATTR;
 typedef struct TABLE_STRUCTURE     TABLE_STRUCTURE;
 typedef struct DB_TABLE_INFO_SET   DB_TABLE_INFO_SET;
+typedef struct DB_TABLE_SET_HEAD   DB_TABLE_SET_HEAD;
 typedef struct DB_QUERY_RESULT_SET DB_QUERY_RESULT_SET;
 
 /**
@@ -88,17 +89,20 @@ typedef struct ROW_DATA
 struct DB_TABLE_INFO_SET
 {
 	list_head     List;
-	char         *pzTableName;
-	TABLE_STRUCT *pTableStruct;
+	char         *pszTableName;
+	TABLE_STRUCTURE *pTableStruct;
 };
 
 /**
  * 库表结构列表头
  */
-typedef struct DB_TABLE_SET_HEAD
+struct DB_TABLE_SET_HEAD
 {
 	list_head List;
-} DB_TABLE_SET_HEAD;
+	void *(*New)();
+	void *(*Find)(DB_TABLE_SET_HEAD *head, char *pszTableName);
+	int (*AddHead)(DB_TABLE_SET_HEAD *head, DB_TABLE_INFO_SET *new);
+};
 
 /**
  * 库表查询结果集合
