@@ -29,7 +29,6 @@ int InitLogger(Logger *log, LOGTYPE type, const char pszLogPath[], const char ps
 
 	if(*szLogFileName)
 	{
-		//log->iLogFd = open(szLogFileName, O_RDWR|O_CREAT|O_APPEND, 0644);
 		log->iLogFd = open(szLogFileName, O_RDWR|O_CREAT|O_TRUNC, 0644);
 		if(log->iLogFd<1)
 			return -1;
@@ -42,6 +41,33 @@ int InitLogger(Logger *log, LOGTYPE type, const char pszLogPath[], const char ps
 	return 0;
 }
 
+#include <sys/timeb.h>
+static int getTimeString(char *buf)
+{
+	time_t t;
+	struct tm *tmp,tmRes;
+	struct  timeb stTimeB;
+	char timeString[64] = "";
+	int buflen = 0;
+	memset((char *)&stTimeB,'\0',sizeof(struct  timeb));
+	memset((char *)&tmRes,'\0',sizeof(struct tm));
+
+	ftime(&stTimeB);
+	t =stTimeB.time;
+	tmp=localtime_r(&t,&tmRes);
+
+	if (tmp == NULL)
+		return 0;
+
+	if ((buflen=strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", tmp)) == 0)
+		return 0;
+
+	memcpy(buf, timeString, buflen);
+	buflen+=sprintf(buf+buflen, ".%d", stTimeB.millitm);
+
+	return buflen;
+}
+
 int Log(Logger log, LOGTYPE type, const char *fmt, ...)
 {
 	int  nLogBufferLength = 0;
@@ -49,12 +75,33 @@ int Log(Logger log, LOGTYPE type, const char *fmt, ...)
 
 	va_list ap;
 
+	if(log.iShowTime)
+	{
+		nLogBufferLength = getTimeString(szLogBuffer);
+		nLogBufferLength+= sprintf(szLogBuffer+nLogBufferLength, " ");
+	}
+
 	va_start(ap, fmt);
-	nLogBufferLength = vsnprintf(szLogBuffer, 1024*8, fmt, ap);
+	nLogBufferLength += vsnprintf(szLogBuffer+nLogBufferLength, 1024*8, fmt, ap);
 	va_end(ap);
 
 	write(log.iLogFd, szLogBuffer, nLogBufferLength);
 
+	return 0;
+}
+
+int SetLogAttr(Logger *log, int key, int value)
+{
+	return_val_if_fail(log!=NULL, -1);
+
+	switch(key)
+	{
+		case SHOW_TIME_STRING:
+			log->iShowTime = value;
+			break;
+		default:
+			return 1;
+	}
 	return 0;
 }
 
@@ -93,8 +140,8 @@ void LogDumpHex(Logger log, LOGTYPE type, const char *pMem, unsigned int size, c
     for(y=0; y<Y_line; y++)
     {
         memset(szAsciiCode, 0x00, sizeof(szAsciiCode));
-        if(y==Y_line-1)
-            X_line = TOTAL_SIZE%LINE_BYTE;
+				if(y==Y_line-1)
+					X_line = TOTAL_SIZE%LINE_BYTE==0?LINE_BYTE:TOTAL_SIZE%LINE_BYTE;
 
         Log(log, type, "%06X(%04d): ", y*LINE_BYTE, y);
 
@@ -105,7 +152,7 @@ void LogDumpHex(Logger log, LOGTYPE type, const char *pMem, unsigned int size, c
             sprintf(szAsciiCode+strlen(szAsciiCode), "%c", isprint(chBtye)?chBtye:'.');
         }
 
-        if(X_line != LINE_BYTE)
+        if(X_line - LINE_BYTE)
         {
             for(; x<LINE_BYTE; x++)
             {

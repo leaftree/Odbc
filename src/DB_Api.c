@@ -334,12 +334,13 @@ SQLINTEGER DBApiQuery(DB_QUERY_RESULT_SET *pDbQueryRes,
                 pTblCurs->Next(pTblCurs, &pFieldAttr);
 
             //Log(logger, MESSAGE, "pszColVal=%s iRealSize=%d\n", pszColVal, iRealSize);
-            memcpy(new->pValue+nColOfs, pszColVal, iRealSize);
+						if(iRealSize>0)
+							memcpy(new->pValue+nColOfs, pszColVal, iRealSize);
             nColOfs+=pFieldAttr->nFieldSize+1;
         }
         pDbQueryRes->AddTail(pDbQueryRes, new);
     }
-    list_head *pos;
+    //list_head *pos;
 
     xFree(pszColVal);
     return DBOP_OK;
@@ -713,6 +714,7 @@ void *FindTableInfo(DB_TABLE_SET_HEAD *head, char *pszTableName)
 
 int GetTableStruct(DB_TABLE_SET_HEAD *head, char *pszTableName)
 {
+	return 0;
     //pTabStruct = NewTableStruct();
 }
 

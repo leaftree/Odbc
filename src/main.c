@@ -5,13 +5,6 @@
 
 Logger logger;
 
-int func()
-{
-    return_val_if_fail(10==11, 100);
-    printf("abc\n");
-    return 0;
-}
-
 #if 0
 static void ListDSN(SQLHANDLE hEnv);
 static void GetError(SQLINTEGER hType, SQLHENV EnvironmentHandle, SQLHDBC ConnectionHandle, SQLHSTMT StatementHandle);
@@ -280,14 +273,18 @@ void ListDSN(SQLHANDLE hEnv)
 
 #include "DB_Api.h"
 
-typedef struct {
-    char caLineId[3];
-    char caStationId[5];
-    char caCNName[65];
-    char caENName[65];
-    char caLocationType[3];
-    char caLocationValue[5];
-} ST_BASI_STATION_INFO_extbl;
+typedef struct
+{
+    char caLINE_ID [3];
+    char caSTATION_ID [5];
+    char caSTATION_CN_NAME [65];
+    char caSTATION_EN_NAME [65];
+    char caLOCATION_TYPE [3];
+    char caLOCATION_ID [5];
+    char caLOCATION_NUMBER [21];
+    char caSTATION_IP [21];
+    char caDEVICE_ID [11];
+}ST_BASI_STATION_INFO_extbl;
 
 #if 0
 int main()
@@ -375,21 +372,50 @@ int main()
 }
 #endif
 
-void ShowInfo(ST_BASI_STATION_INFO_extbl *bsi)
+void ShowTableInfo(TABLE_STRUCTURE *table_struct)
 {
-    Log(logger, MESSAGE, "caLineId=%s\t"
-            "caStationId=%s\t"
-            "caCNName=%s\t"
-            "caENName=%s\t"
-            "caLocationType=%s\t"
-            "caLocationValue=%s\n",
-            bsi->caLineId,
-            bsi->caStationId,
-            bsi->caCNName,
-            bsi->caENName,
-            bsi->caLocationType,
-            bsi->caLocationValue
-            );
+	TABLE_STRUCTURE *table = table_struct;
+	FIELD_ATTR *field;
+
+	table->Next(table, &field);
+
+	SetLogAttr(&logger, SHOW_TIME_STRING, OFF);
+	while(table->Next(table, &field)==0)
+	{
+		int width=max(field->nFieldSize, strlen(field->szFieldName))+1;
+		if(width>30)
+			width=30;
+		Log(logger, MESSAGE, "%-*.*s", width, width, field->szFieldName);
+	}
+	Log(logger, MESSAGE, "\n");
+	SetLogAttr(&logger, SHOW_TIME_STRING, ON);
+}
+
+void ShowInfo(TABLE_STRUCTURE *table_struct, ST_BASI_STATION_INFO_extbl *bsi)
+{
+	SetLogAttr(&logger, SHOW_TIME_STRING, OFF);
+
+	int len=0;
+	char *pMem = (char*)bsi;
+	TABLE_STRUCTURE *table = table_struct;
+	FIELD_ATTR *field;
+
+	while(table->Next(table, &field)==0)
+	{
+		char MemValue[128] = "";
+		memset(MemValue, 0x0, sizeof(MemValue));
+		memcpy(MemValue, pMem+len, field->nFieldSize);
+		MemValue[strlen(MemValue)]=0;
+		len+=field->nFieldSize+1;
+		int width=max(field->nFieldSize, strlen(field->szFieldName))+1;
+		//if(width>30) width=30;
+		//LogDumpHex(logger, MESSAGE, MemValue, width-1, field->szFieldName);
+		Log(logger, MESSAGE, "%-*.*s", width, width, MemValue);
+		//Log(logger, MESSAGE, "%s", MemValue);
+	}
+	Log(logger, MESSAGE, "\n");
+
+	SetLogAttr(&logger, SHOW_TIME_STRING, ON);
 }
 
 int main()
@@ -406,7 +432,6 @@ int main()
 
     SQLCHAR caSqlStmt[1024] = "";
 
-    int i=0;
     ST_BASI_STATION_INFO_extbl *bsi;
 
     if(DBOP_NO == DBApiInitEnv(&hEnv, &hDbc))
@@ -415,7 +440,8 @@ int main()
         return 1;
     }
 
-    if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"root", (u_char*)"123kbc,./"))
+    //if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"fyl", (u_char*)"123kbc"))
+    if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"Oracle", (u_char*)"sjzlc41db", (u_char*)"sjzlc41db"))
     {
         Log(logger, ERROR, "DBApiConnectDatabase fail\n");
         return 1;
@@ -429,6 +455,7 @@ int main()
 
     DB_QUERY_RESULT_SET *dbset = InitDbQuerySet(hDbc, hStmt);
 
+		/*
     sprintf((char*)caSqlStmt, "%s", "use fyl");
 
     if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
@@ -436,8 +463,9 @@ int main()
         Log(logger, ERROR, "DBApiExecSQL fail\n");
         return 1;
     }
+		*/
 
-    sprintf((char*)caSqlStmt, "%s", "select * from BASI_STATION_INFO");
+    sprintf((char*)caSqlStmt, "%s", "select * from BASI_STATION_INFO where rownum<5");
     if(DBOP_OK != DBApiQuery(dbset, caSqlStmt))
     {
         Log(logger, ERROR, "DBApiQuery fail\n");
@@ -446,13 +474,12 @@ int main()
 
     ROW_DATA *row = NULL;
 
-    Log(logger, MESSAGE, "CODE RESOURCE[%s(%d)-%s].\n", __FILE__, __LINE__, __func__);
-    while(0==(i=dbset->Next(dbset, &row)))
+		ShowTableInfo(dbset->pTableStruct);
+    while(0==dbset->Next(dbset, &row))
     {
         bsi = row->pValue;
-        ShowInfo(bsi);
+        ShowInfo(dbset->pTableStruct, bsi);
     }
-    Log(logger, MESSAGE, "CODE RESOURCE[%s(%d)-%s]. i=%d\n", __FILE__, __LINE__, __func__, i);
 
     dbset->Destroy(&dbset);
 
@@ -465,15 +492,13 @@ int main()
     }
 
     SQLCHAR szSqlStmt[1024] = "";
-    sprintf(szSqlStmt, "insert into BASI_STATION_INFO values('11', '1111', '中文', 'English', '99', '9999')");
+    sprintf((char*)szSqlStmt, "insert into BASI_STATION_INFO values('11', '1111', '中文', 'English', '99', '9999')");
     //DBApiInsertSQL(hStmt, szSqlStmt);
 
     DBApiFreeStmt(hStmt);
     DBApiDisConnectDatabase(hDbc);
     DBApiFreeDbc(hDbc);
     DBApiFreeEnv(hEnv);
-
-   printf("%d\n", func());
 
     //muntrace();
     return 0;

@@ -40,7 +40,7 @@ mt:mtrace.log
 	-@mtrace mtrace.log
 
 tags:$(src) $(inc)
-	-@ctags $(src) $(inc)
+	-@ctags --c-kinds=+p --c++-kinds=+p --fields=+iaS --extra=+q --language-force=C++ --languages=c,c++ --langmap=c:+.h -R --sort=yes  $(src) $(inc)
 
 .PHONY:clean
 clean:
