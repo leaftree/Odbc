@@ -19,11 +19,18 @@
 
 #define xFree(var) (var=(var==NULL?NULL:(free(var)), NULL))
 
-#define return_val_if_fail_warning(a, b, c) printf("%s\n", c)
+#define xPrintf(...)
+
+#define return_if_fail_warning(a, b, c) xPrintf("%s\n", c)
+
+#define return_if_fail(expr) do {\
+	if(!(expr)){\
+	return_if_fail_warning("≤‚ ‘", "≤‚ ‘", #expr); \
+	}}while(0)\
 
 #define return_val_if_fail(expr, val) do {\
-	if(expr) { } else { \
-	return_val_if_fail_warning("≤‚ ‘", "≤‚ ‘", #expr); \
+	if(!(expr)) {\
+	return_if_fail_warning("≤‚ ‘", "≤‚ ‘", #expr); \
 	return(val); }}while(0)\
 
 #define min(x,y) ({ \

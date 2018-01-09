@@ -229,7 +229,7 @@ list_replace_init	List.h	/^static inline void list_replace_init(struct list_head
 list_rotate_left	List.h	/^static inline void list_rotate_left(struct list_head *head)$/;"	f	signature:(struct list_head *head)
 logger	main.c	/^Logger logger;$/;"	v
 main	main.c	/^int main()$/;"	f	signature:()
-max	main.h	35;"	d
+max	main.h	34;"	d
 min	main.h	29;"	d
 nFieldCounter	DB_Api.h	/^	int         nFieldCounter;$/;"	m	struct:TABLE_STRUCTURE	access:public
 nFieldSize	DB_Api.h	/^	int              nFieldSize;$/;"	m	struct:FIELD_ATTR	access:public

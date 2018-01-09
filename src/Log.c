@@ -75,6 +75,9 @@ int Log(Logger log, LOGTYPE type, const char *fmt, ...)
 
 	va_list ap;
 
+	// for debug
+	return_if_fail(log.iLogFd<0);
+
 	if(log.iShowTime)
 	{
 		nLogBufferLength = getTimeString(szLogBuffer);
@@ -92,7 +95,8 @@ int Log(Logger log, LOGTYPE type, const char *fmt, ...)
 
 int SetLogAttr(Logger *log, int key, int value)
 {
-	return_val_if_fail(log!=NULL, -1);
+	return_if_fail(log!=NULL);
+	return_if_fail(log->iLogFd<0);
 
 	switch(key)
 	{

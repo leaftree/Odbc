@@ -95,7 +95,7 @@ int main()
        }
        */
 
-    printf("读取数据...\n");
+    printf("璇诲彇鏁版嵁...\n");
 
     int iColCnt = 0;
     SQLLEN iRealSize = 0;
@@ -383,8 +383,7 @@ void ShowTableInfo(TABLE_STRUCTURE *table_struct)
 	while(table->Next(table, &field)==0)
 	{
 		int width=max(field->nFieldSize, strlen(field->szFieldName))+1;
-		if(width>30)
-			width=30;
+		if(width>30) width=30;
 		Log(logger, MESSAGE, "%-*.*s", width, width, field->szFieldName);
 	}
 	Log(logger, MESSAGE, "\n");
@@ -397,21 +396,20 @@ void ShowInfo(TABLE_STRUCTURE *table_struct, ST_BASI_STATION_INFO_extbl *bsi)
 
 	int len=0;
 	char *pMem = (char*)bsi;
+	char MemValue[128] = "";
 	TABLE_STRUCTURE *table = table_struct;
 	FIELD_ATTR *field;
 
 	while(table->Next(table, &field)==0)
 	{
-		char MemValue[128] = "";
-		memset(MemValue, 0x0, sizeof(MemValue));
 		memcpy(MemValue, pMem+len, field->nFieldSize);
-		MemValue[strlen(MemValue)]=0;
+		MemValue[field->nFieldSize] = 0x0;
 		len+=field->nFieldSize+1;
 		int width=max(field->nFieldSize, strlen(field->szFieldName))+1;
-		//if(width>30) width=30;
-		//LogDumpHex(logger, MESSAGE, MemValue, width-1, field->szFieldName);
+		if(width>30)
+			width=30;
+
 		Log(logger, MESSAGE, "%-*.*s", width, width, MemValue);
-		//Log(logger, MESSAGE, "%s", MemValue);
 	}
 	Log(logger, MESSAGE, "\n");
 
@@ -440,8 +438,8 @@ int main()
         return 1;
     }
 
-    //if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"fyl", (u_char*)"123kbc"))
-    if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"Oracle", (u_char*)"sjzlc41db", (u_char*)"sjzlc41db"))
+    if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"MySQL", (u_char*)"fyl", (u_char*)"123kbc,./"))
+    //if(DBOP_NO == DBApiConnectDatabase(&hDbc, (u_char*)"Oracle", (u_char*)"sjzlc41db", (u_char*)"sjzlc41db"))
     {
         Log(logger, ERROR, "DBApiConnectDatabase fail\n");
         return 1;
@@ -455,17 +453,8 @@ int main()
 
     DB_QUERY_RESULT_SET *dbset = InitDbQuerySet(hDbc, hStmt);
 
-		/*
-    sprintf((char*)caSqlStmt, "%s", "use fyl");
-
-    if(DBOP_NO == DBApiExecSQL(hStmt, caSqlStmt))
-    {
-        Log(logger, ERROR, "DBApiExecSQL fail\n");
-        return 1;
-    }
-		*/
-
-    sprintf((char*)caSqlStmt, "%s", "select * from BASI_STATION_INFO where rownum<5");
+    //sprintf((char*)caSqlStmt, "%s", "select station_id, station_cn_name, station_en_name from basi_station_info where station_id = '0107'");
+    sprintf((char*)caSqlStmt, "%s", "select * from basi_station_info");
     if(DBOP_OK != DBApiQuery(dbset, caSqlStmt))
     {
         Log(logger, ERROR, "DBApiQuery fail\n");
@@ -485,20 +474,11 @@ int main()
 
     DBApiFreeStmt(hStmt);
 
-    if(DBOP_NO == DBApiPreExecSQL(hDbc, &hStmt))
-    {
-        Log(logger, ERROR, "DBApiPreExecSQL fail\n");
-        return 1;
-    }
-
-    SQLCHAR szSqlStmt[1024] = "";
-    sprintf((char*)szSqlStmt, "insert into BASI_STATION_INFO values('11', '1111', '中文', 'English', '99', '9999')");
-    //DBApiInsertSQL(hStmt, szSqlStmt);
-
     DBApiFreeStmt(hStmt);
     DBApiDisConnectDatabase(hDbc);
     DBApiFreeDbc(hDbc);
     DBApiFreeEnv(hEnv);
+		CloseLogger(&logger);
 
     //muntrace();
     return 0;
